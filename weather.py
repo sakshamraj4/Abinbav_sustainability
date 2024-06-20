@@ -181,7 +181,7 @@ def plot_weather_trends(weather_df):
                     mode='text', text=weather_df['rain_emoji'], name='Rain', textposition='top center')
     fig.add_scatter(x=weather_df['dt'], y=[weather_df['temp_min_C'].min()] * len(weather_df),
                     mode='text', text=weather_df['clouds_emoji'], name='Clouds', textposition='top center')
-    fig.update_layout(height=1000)
+    fig.update_layout(height=700)
     return fig
     
 activity_data_url = "https://raw.githubusercontent.com/sakshamraj4/Abinbav_sustainability/main/activity_avinbev.csv"
