@@ -194,20 +194,20 @@ def plot_weather_trends(weather_df):
     return fig
     
 #activity_data_url = "https://raw.githubusercontent.com/sakshamraj4/abinbev/main/activity_avinbev.csv"
-activity_data_url = "/home/az-134/Downloads/activity_avinbev.csv"
+activity_data_url = "https://raw.githubusercontent.com/sakshamraj4/activity_avinbev.csv"
 activity_df = pd.read_csv(activity_data_url)
 
-new_data_url = "https://raw.githubusercontent.com/sakshamraj4/abinbev/main/data.csv"
+new_data_url = "hhttps://raw.githubusercontent.com/sakshamraj4/Abinbav_sustainability/main/data.csv"
 new_data_df = pd.read_csv(new_data_url)
 
 #growth_tracker_url = "https://raw.githubusercontent.com/sakshamraj4/abinbev/main/Growth_Tracker.csv"
-growth_tracker_url = "/home/az-134/Downloads/Growth_Tracker.csv"
+growth_tracker_url = "https://raw.githubusercontent.com/sakshamraj4/Abinbav_sustainability/main/Growth_Tracker.csv"
 growth_tracker_df = pd.read_csv(growth_tracker_url)
 
-growth_data_csv_url = "/home/az-134/Downloads/fig.csv"
+growth_data_csv_url = "https://raw.githubusercontent.com/sakshamraj4/Abinbav_sustainability/main/fig.csv"
 growth_data_df = pd.read_csv(growth_data_csv_url)
 
-weather_data_url = "/home/az-134/Downloads/weather_data.csv"
+weather_data_url = "https://raw.githubusercontent.com/sakshamraj4/Abinbav_sustainability/main//weather_data.csv"
 weather_df = pd.read_csv(weather_data_url)
 
 menu_options = ['Organisation level Summary', 'Plot level Summary']
