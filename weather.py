@@ -165,55 +165,37 @@ def kelvin_to_celsius(k):
 
 def plot_weather_trends(weather_df):
     weather_df['dt'] = pd.to_datetime(weather_df['dt'], errors='coerce')
-
-    weather_df['temp_morn_C'] = kelvin_to_celsius(weather_df['temp_morn'])
     weather_df['temp_max_C'] = kelvin_to_celsius(weather_df['temp_max'])
-    weather_df['temp_eve_C'] = kelvin_to_celsius(weather_df['temp_eve'])
-    weather_df['temp_night_C'] = kelvin_to_celsius(weather_df['temp_night'])
-    weather_df['temp_day_C'] = kelvin_to_celsius(weather_df['temp_day'])
     weather_df['temp_min_C'] = kelvin_to_celsius(weather_df['temp_min'])
-
-    weather_df['wind_deg_normalized'] = weather_df['wind_deg'] / 360.0
     weather_df['clouds_normalized'] = weather_df['clouds'] / 100.0
-    weather_df['humidity'] = weather_df['humidity'] / 100.0   
-    weather_df['pressure'] = weather_df['pressure'] / 100.0
-
-    fig = px.line(weather_df, x='dt', y=['temp_morn_C', 'temp_max_C', 'temp_eve_C', 'temp_night_C', 'temp_day_C', 'temp_min_C'],
+    weather_df['snow_emoji'] = weather_df['snow'].apply(lambda x: '❄️' if x > 0 else '')
+    weather_df['rain_emoji'] = weather_df['rain'].apply(lambda x: '🌧️' if x > 0 else '')
+    weather_df['clouds_emoji'] = weather_df['clouds_normalized'].apply(lambda x: '☁️' if x > 0.5 else '')
+    fig = px.line(weather_df, x='dt', y=['temp_max_C', 'temp_min_C'],
                   title='Temperature Trends',
                   labels={'dt': 'Date', 'value': 'Temperature (°C)'},
                   line_shape='linear')
-
-    #fig.add_scatter(x=weather_df['dt'], y=weather_df['pressure'], mode='markers', name='Pressure')
-    fig.add_scatter(x=weather_df['dt'], y=weather_df['rain'], mode='markers', name='Rain')
-    fig.add_scatter(x=weather_df['dt'], y=weather_df['snow'], mode='markers', name='Snow')
-    fig.add_scatter(x=weather_df['dt'], y=weather_df['humidity'], mode='markers', name='Humidity')
-    fig.add_scatter(x=weather_df['dt'], y=weather_df['clouds_normalized'], mode='markers', name='Clouds')
-    fig.add_scatter(x=weather_df['dt'], y=weather_df['wind_speed'], mode='markers', name='Wind Speed')
-    fig.update_layout(height=1000)
-    #fig.add_scatter(x=weather_df['dt'], y=weather_df['wind_deg_normalized'], mode='markers', name='Wind Degree')
-
+    fig.add_scatter(x=weather_df['dt'], y=[weather_df['temp_max_C'].max()] * len(weather_df),
+                    mode='text', text=weather_df['snow_emoji'], name='Snow', textposition='top center')
+    fig.add_scatter(x=weather_df['dt'], y=[weather_df['temp_min_C'].max()] * len(weather_df),
+                    mode='text', text=weather_df['rain_emoji'], name='Rain', textposition='top center')
+    fig.add_scatter(x=weather_df['dt'], y=[weather_df['temp_min_C'].min()] * len(weather_df),
+                    mode='text', text=weather_df['clouds_emoji'], name='Clouds', textposition='top center')
     return fig
     
-#activity_data_url = "https://raw.githubusercontent.com/sakshamraj4/abinbev/main/activity_avinbev.csv"
 activity_data_url = "https://raw.githubusercontent.com/sakshamraj4/Abinbav_sustainability/main/activity_avinbev.csv"
 activity_df = pd.read_csv(activity_data_url)
-
 new_data_url = "https://raw.githubusercontent.com/sakshamraj4/Abinbav_sustainability/main/data.csv"
 new_data_df = pd.read_csv(new_data_url)
-
-#growth_tracker_url = "https://raw.githubusercontent.com/sakshamraj4/abinbev/main/Growth_Tracker.csv"
 growth_tracker_url = "https://raw.githubusercontent.com/sakshamraj4/Abinbav_sustainability/main/Growth_Tracker.csv"
 growth_tracker_df = pd.read_csv(growth_tracker_url)
-
 growth_data_csv_url = "https://raw.githubusercontent.com/sakshamraj4/Abinbav_sustainability/main/fig.csv"
 growth_data_df = pd.read_csv(growth_data_csv_url)
-
 weather_data_url = "https://raw.githubusercontent.com/sakshamraj4/Abinbav_sustainability/main//weather_data.csv"
 weather_df = pd.read_csv(weather_data_url)
 
 menu_options = ['Organisation level Summary', 'Plot level Summary']
 choice = st.sidebar.selectbox('Go to', menu_options)
-
 if choice == 'Organisation level Summary':
     st.title("AB InBev Sustainability Dashboard")
     st.header("Organisation level Summarrization")
