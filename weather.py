@@ -189,6 +189,7 @@ def plot_weather_trends(weather_df):
     fig.add_scatter(x=weather_df['dt'], y=weather_df['humidity'], mode='markers', name='Humidity')
     fig.add_scatter(x=weather_df['dt'], y=weather_df['clouds_normalized'], mode='markers', name='Clouds')
     fig.add_scatter(x=weather_df['dt'], y=weather_df['wind_speed'], mode='markers', name='Wind Speed')
+    fig.update_layout(height=1000)
     #fig.add_scatter(x=weather_df['dt'], y=weather_df['wind_deg_normalized'], mode='markers', name='Wind Degree')
 
     return fig
