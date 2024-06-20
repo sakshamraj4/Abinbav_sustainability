@@ -194,10 +194,10 @@ def plot_weather_trends(weather_df):
     return fig
     
 #activity_data_url = "https://raw.githubusercontent.com/sakshamraj4/abinbev/main/activity_avinbev.csv"
-activity_data_url = "hhttps://raw.githubusercontent.com/sakshamraj4/Abinbav_sustainability/main/activity_avinbev.csv"
+activity_data_url = "https://raw.githubusercontent.com/sakshamraj4/Abinbav_sustainability/main/activity_avinbev.csv"
 activity_df = pd.read_csv(activity_data_url)
 
-new_data_url = "hhttps://raw.githubusercontent.com/sakshamraj4/Abinbav_sustainability/main/data.csv"
+new_data_url = "https://raw.githubusercontent.com/sakshamraj4/Abinbav_sustainability/main/data.csv"
 new_data_df = pd.read_csv(new_data_url)
 
 #growth_tracker_url = "https://raw.githubusercontent.com/sakshamraj4/abinbev/main/Growth_Tracker.csv"
