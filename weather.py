@@ -5,8 +5,16 @@ from datetime import datetime, timedelta
 
 st.set_page_config(layout="wide")
 
+# Define custom CSS for light theme
 st.markdown("""
     <style>
+    body {
+        background-color: #ffffff;
+        color: #333;
+    }
+    .stApp {
+        background-color: #ffffff;
+    }
     .box {
         background-color: #ffffff;
         border: 2px solid #e0e0e0;
