@@ -5,7 +5,6 @@ from datetime import datetime, timedelta
 
 st.set_page_config(layout="wide")
 
-# Define custom CSS for light theme
 st.markdown("""
     <style>
     body {
@@ -47,7 +46,7 @@ def create_bar_plots(df):
                 'Status': ['Total', 'Done and Pop Followed'],
                 'Count': [total_count, done_count]
             })
-            colors = ['blue', 'green']  # Set the color for "Done and Pop Followed" as green
+            colors = ['blue', 'green']
             fig = px.bar(df_plot, x='Count', y='Status', orientation='h', text='Count', width=800, height=200, color='Status', color_discrete_sequence=colors)
             fig.update_traces(texttemplate='%{text}', textposition='outside')
             fig.update_layout(
@@ -58,13 +57,25 @@ def create_bar_plots(df):
             )
             st.plotly_chart(fig)
 
-def create_line_chart(df):
-    df['Date'] = pd.to_datetime(df['Date'])    
-    last_week = datetime.now() - timedelta(days=7)
-    df_filtered = df[df['Date'] >= last_week]
-    df_counts = df_filtered.groupby('FarmName')['Activity'].nunique().reset_index()
-    fig = px.line(df_counts, x='FarmName', y='Activity', title='Activities per FarmName in Last 7 Days')
+def create_line_chart(df, time_frame):
+    df['Date'] = pd.to_datetime(df['Date'])
+    
+    if time_frame == 'Last 2 Days':
+        last_days = datetime.now() - timedelta(days=2)
+    elif time_frame == 'Last Week':
+        last_days = datetime.now() - timedelta(days=7)
+    elif time_frame == 'Last Month':
+        last_days = datetime.now() - timedelta(days=30)
+    
+    df_filtered = df[df['Date'] >= last_days]
+    
+    df_counts = df_filtered.groupby(['FarmName', 'Date']).size().reset_index(name='Activity')
+    
+    df_counts = df_counts.groupby('FarmName').size().reset_index(name='Activity')
+    
+    fig = px.line(df_counts, x='FarmName', y='Activity', title=f'Activities per FarmName in {time_frame}')
     fig.update_layout(xaxis_title='FarmName', yaxis_title='Number of Activities')
+    
     return fig
 
 def create_dot_plot(df):
@@ -82,29 +93,29 @@ def create_dot_plot(df):
                     color = 'red'
                 if color:
                     dot_data.append({'Column': column, 'FarmName': df['Farm Name'][idx], 'Value': value, 'Color': color})
-    dot_df = pd.DataFrame(dot_data)   
-    dot_df = dot_df.sort_values(by='Column')   
+    dot_df = pd.DataFrame(dot_data)
+    dot_df = dot_df.sort_values(by='Column')
     fig = px.scatter(dot_df, x='Column', y='FarmName', color='Color', 
                      color_discrete_map={'green': 'green', 'yellow': 'yellow', 'red': 'red'},
                      title="Growth Tracker Data",
                      labels={'FarmName': 'Farm Name'},
-                     hover_data={'Value': True, 'Color': False})   
+                     hover_data={'Value': True, 'Color': False})
     fig.update_layout(height=1500)
-    fig.update_traces(marker=dict(size=10), selector=dict(mode='markers'))  
+    fig.update_traces(marker=dict(size=10), selector=dict(mode='markers'))
     return fig
-    
+
 def create_dot_plot_1(df):
     df = df.astype(str)
     dot_data = []
     columns_to_process = list(df.columns)
     if 'Farm Name' in columns_to_process:
-        columns_to_process.remove('Farm Name')  # Remove 'Farm Name' from the list of columns to process  
+        columns_to_process.remove('Farm Name')
     for column in columns_to_process:
         for idx, value in enumerate(df[column]):
             color = None
             if column == 'Sowing' or column == 'M0P/DAP' or column == 'UREA 1':
                 try:
-                    numeric_value = float(value.replace(',', '').split()[0])  # Remove commas and take the first part if it's a date
+                    numeric_value = float(value.replace(',', '').split()[0])
                     if (column == 'Sowing' and 7.5 <= numeric_value <= 8.5) or \
                        (column == 'M0P/DAP' and 9.5 <= numeric_value <= 10.5) or \
                        (column == 'UREA 1' and 6.5 <= numeric_value <= 7.5):
@@ -112,7 +123,7 @@ def create_dot_plot_1(df):
                     else:
                         color = 'red'
                 except ValueError:
-                    pass  # Handle non-numeric or invalid format gracefully
+                    pass
             elif column == 'Weeding 1':
                 if value.strip() and value.lower() not in ['nan', '0', 'null']:
                     color = 'green'
@@ -128,24 +139,21 @@ def create_dot_plot_1(df):
                 farm_link = f"<a href='https://farmimage.streamlit.app/?farm_name={farm_name}' target='_blank'>{farm_name}</a>"
                 dot_data.append({'Column': column, 'FarmName': farm_link, 'Value': value, 'Color': color})
     dot_df = pd.DataFrame(dot_data)
-    
-    # Ensure columns are sorted in the order they appear in the CSV sheet
     dot_df['Column'] = pd.Categorical(dot_df['Column'], categories=columns_to_process, ordered=True)
     dot_df = dot_df.sort_values(by='Column')
-
     fig = px.scatter(dot_df, x='Column', y='FarmName', color='Color',
                      color_discrete_map={'green': 'green', 'red': 'red'},
                      title="Growth Tracker Data",
-                     category_orders={'Column': columns_to_process},  # Specify the category order for x-axis
+                     category_orders={'Column': columns_to_process},
                      labels={'FarmName': 'Farm Name'},
-                     hover_data={'Value': True, 'FarmName': False, 'Color': False})  # Remove FarmName from hover data as it's now a link
+                     hover_data={'Value': True, 'FarmName': False, 'Color': False})
     fig.update_layout(height=1500)
     fig.update_traces(marker=dict(size=10), selector=dict(mode='markers'))
     return fig
-    
+
 def create_stacked_bar_chart(df):
     df = df.astype(str)
-    status_counts = {}  
+    status_counts = {}
     for column in df.columns:
         if column != 'Farm Name':
             well_and_passed_count = df[df[column].str.startswith('well and passed', na=False)].shape[0]
@@ -155,9 +163,9 @@ def create_stacked_bar_chart(df):
                 'Well and Passed': well_and_passed_count,
                 'Current': current_count,
                 'Some Alert or not reached to this stage': other_count
-            }   
+            }
     status_df = pd.DataFrame(status_counts).T.reset_index()
-    status_df = status_df.melt(id_vars='index', var_name='Status', value_name='Count')    
+    status_df = status_df.melt(id_vars='index', var_name='Status', value_name='Count')
     fig = px.bar(status_df, x='index', y='Count', color='Status', 
                  color_discrete_map={
                      'Well and Passed': 'green', 
@@ -167,7 +175,7 @@ def create_stacked_bar_chart(df):
                  title="Status Counts per Column in Growth Tracker",
                  labels={'index': 'Columns'})
     return fig
-    
+
 def kelvin_to_celsius(k):
     return k - 273.15
 
@@ -191,7 +199,7 @@ def plot_weather_trends(weather_df):
                     mode='text', text=weather_df['clouds_emoji'], name='Clouds', textposition='top center')
     fig.update_layout(height=700)
     return fig
-    
+
 activity_data_url = "https://raw.githubusercontent.com/sakshamraj4/Abinbav_sustainability/main/activity_avinbev.csv"
 activity_df = pd.read_csv(activity_data_url)
 new_data_url = "https://raw.githubusercontent.com/sakshamraj4/Abinbav_sustainability/main/data.csv"
@@ -222,7 +230,6 @@ if choice == 'Organisation level Summary':
         st.markdown('<div class="box"><h2>Average Urea1 Rate</h2><p>7.01</p></div>', unsafe_allow_html=True)
     with col6:
         st.markdown('<div class="box"><h2>Average Urea2 Rate</h2><p>N/A</p></div>', unsafe_allow_html=True)
-   
     create_bar_plots(activity_df)
     
     st.header("Growth Tracker Status")
@@ -231,9 +238,12 @@ if choice == 'Organisation level Summary':
 
 elif choice == 'Plot level Summary':
     st.title("Plot level Summarization")
-    st.header("Farm Activity in Last 7 Days")
+    st.header("Plot Visit Summary by Field Team")
+
+    time_frame_options = ['Last 2 Days', 'Last Week', 'Last Month']
+    selected_time_frame = st.selectbox('Select Time Frame', time_frame_options)
     
-    fig = create_line_chart(new_data_df)
+    fig = create_line_chart(new_data_df, selected_time_frame)
     st.plotly_chart(fig)
     
     st.subheader("Weather Trends")
