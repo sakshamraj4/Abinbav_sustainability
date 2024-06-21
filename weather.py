@@ -276,7 +276,7 @@ elif choice == 'Plot level Summary':
     st.title("Plot level Summarization")
     st.header("Plot Visit Summary by Field Team")
 
-    time_frame_options = ['Last 2 Days', 'Last Week', 'Last Month']
+    time_frame_options = ['Last Week', 'Last Month']
     selected_time_frame = st.selectbox('Select Time Frame', time_frame_options)
     
     fig = create_line_chart(new_data_df, selected_time_frame)
