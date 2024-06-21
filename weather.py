@@ -68,8 +68,8 @@ def create_line_chart(df, time_frame):
         if df['Date'].isnull().any():
             logging.warning("There are NaT values in 'Date' column after conversion.")
         
-        #if time_frame == 'Last 2 Days':
-        #    last_days = datetime.now() - timedelta(days=2)
+        if time_frame == 'Last 2 Days':
+            last_days = datetime.now() - timedelta(days=2)
         elif time_frame == 'Last Week':
             last_days = datetime.now() - timedelta(days=7)
         elif time_frame == 'Last Month':
@@ -117,11 +117,20 @@ def create_dot_plot(df):
                     dot_data.append({'Column': column, 'FarmName': df['Farm Name'][idx], 'Value': value, 'Color': color})
     dot_df = pd.DataFrame(dot_data)
     dot_df = dot_df.sort_values(by='Column')
+    
     fig = px.scatter(dot_df, x='Column', y='FarmName', color='Color', 
-                     color_discrete_map={'green': 'green', 'yellow': 'yellow', 'red': 'red'},
-                     title="Growth Tracker Data",
+                     color_discrete_map={
+                         'green': 'green',
+                         'yellow': 'yellow',
+                         'red': 'red'
+                     },
+                     title="Plot wise Growth Stage Summary",
                      labels={'FarmName': 'Farm Name'},
                      hover_data={'Value': True, 'Color': False})
+    fig.for_each_trace(lambda t: t.update(name = {'green': 'well and passed', 
+                                                  'yellow': 'current stage', 
+                                                  'red': 'not in current stage or some Alert'}[t.name]))
+
     fig.update_layout(height=1500)
     fig.update_traces(marker=dict(size=10), selector=dict(mode='markers'))
     return fig
@@ -135,7 +144,7 @@ def create_dot_plot_1(df):
     for column in columns_to_process:
         for idx, value in enumerate(df[column]):
             color = None
-            if column == 'Sowing' or column == 'M0P/DAP' or column == 'UREA 1':
+            if column in ['Sowing', 'M0P/DAP', 'UREA 1']:
                 try:
                     numeric_value = float(value.replace(',', '').split()[0])
                     if (column == 'Sowing' and 7.5 <= numeric_value <= 8.5) or \
@@ -146,12 +155,7 @@ def create_dot_plot_1(df):
                         color = 'red'
                 except ValueError:
                     pass
-            elif column == 'Weeding 1':
-                if value.strip() and value.lower() not in ['nan', '0', 'null']:
-                    color = 'green'
-                else:
-                    color = 'red'
-            elif column == 'Irrigation 1':
+            elif column in ['Weeding 1', 'Irrigation 1']:
                 if value.strip() and value.lower() not in ['nan', '0', 'null']:
                     color = 'green'
                 else:
@@ -160,17 +164,27 @@ def create_dot_plot_1(df):
                 farm_name = df['Farm Name'][idx]
                 farm_link = f"<a href='https://farmimage.streamlit.app/?farm_name={farm_name}' target='_blank'>{farm_name}</a>"
                 dot_data.append({'Column': column, 'FarmName': farm_link, 'Value': value, 'Color': color})
+    
     dot_df = pd.DataFrame(dot_data)
     dot_df['Column'] = pd.Categorical(dot_df['Column'], categories=columns_to_process, ordered=True)
     dot_df = dot_df.sort_values(by='Column')
+    
     fig = px.scatter(dot_df, x='Column', y='FarmName', color='Color',
                      color_discrete_map={'green': 'green', 'red': 'red'},
-                     title="Growth Tracker Data",
+                     title="Plot wise Activity Summary",
                      category_orders={'Column': columns_to_process},
                      labels={'FarmName': 'Farm Name'},
                      hover_data={'Value': True, 'FarmName': False, 'Color': False})
+    
+    # Update the trace names for the legend
+    fig.for_each_trace(lambda t: t.update(name={
+        'green': 'well and pop Followed', 
+        'red': 'pop not followed or details not present'
+    }[t.name]))
+
     fig.update_layout(height=1500)
     fig.update_traces(marker=dict(size=10), selector=dict(mode='markers'))
+    
     return fig
 
 def create_stacked_bar_chart(df):
@@ -262,7 +276,7 @@ elif choice == 'Plot level Summary':
     st.title("Plot level Summarization")
     st.header("Plot Visit Summary by Field Team")
 
-    time_frame_options = ['Last Week', 'Last Month']
+    time_frame_options = ['Last 2 Days', 'Last Week', 'Last Month']
     selected_time_frame = st.selectbox('Select Time Frame', time_frame_options)
     
     fig = create_line_chart(new_data_df, selected_time_frame)
