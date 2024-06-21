@@ -4,9 +4,40 @@ import plotly.express as px
 from datetime import datetime, timedelta
 import logging
 
+# Set up logging
 logging.basicConfig(level=logging.INFO)
 
+# Set up Streamlit page configuration
 st.set_page_config(layout="wide")
+
+# Set up password protection
+PASSWORD = "Abinbev@123"
+
+def password_protection():
+    def check_password():
+        if st.session_state["password"] == PASSWORD:
+            st.session_state["password_correct"] = True
+            st.session_state["password_attempts"] = 0
+        else:
+            st.session_state["password_correct"] = False
+            st.session_state["password_attempts"] += 1
+
+    if "password_correct" not in st.session_state:
+        st.session_state["password_correct"] = False
+        st.session_state["password_attempts"] = 0
+
+    if not st.session_state["password_correct"]:
+        if st.session_state["password_attempts"] >= 3:
+            st.error("Too many incorrect attempts. Please refresh the page to try again.")
+        else:
+            st.text_input("Enter password:", type="password", on_change=check_password, key="password")
+            if st.session_state["password_correct"]:
+                st.success("Password correct! Access granted.")
+            elif st.session_state["password_attempts"] > 0:
+                st.error("Password incorrect. Please try again.")
+        st.stop()
+
+password_protection()
 
 st.markdown("""
     <style>
@@ -236,6 +267,7 @@ def plot_weather_trends(weather_df):
     fig.update_layout(height=700)
     return fig
 
+# Load data
 activity_data_url = "https://raw.githubusercontent.com/sakshamraj4/Abinbav_sustainability/main/activity_avinbev.csv"
 activity_df = pd.read_csv(activity_data_url)
 new_data_url = "https://raw.githubusercontent.com/sakshamraj4/Abinbav_sustainability/main/data.csv"
