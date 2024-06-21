@@ -2,6 +2,9 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 from datetime import datetime, timedelta
+import logging
+
+logging.basicConfig(level=logging.INFO)
 
 st.set_page_config(layout="wide")
 
@@ -58,25 +61,44 @@ def create_bar_plots(df):
             st.plotly_chart(fig)
 
 def create_line_chart(df, time_frame):
-    df['Date'] = pd.to_datetime(df['Date'])
+    try:
+        logging.info("Converting 'Date' column to datetime format.")
+        df['Date'] = pd.to_datetime(df['Date'], errors='coerce')
+        
+        if df['Date'].isnull().any():
+            logging.warning("There are NaT values in 'Date' column after conversion.")
+        
+        if time_frame == 'Last 2 Days':
+            last_days = datetime.now() - timedelta(days=2)
+        elif time_frame == 'Last Week':
+            last_days = datetime.now() - timedelta(days=7)
+        elif time_frame == 'Last Month':
+            last_days = datetime.now() - timedelta(days=30)
+        else:
+            raise ValueError("Invalid time_frame value provided.")
+        
+        logging.info(f"Filtering dataframe for the last {time_frame.lower()}.")
+        df_filtered = df[df['Date'] >= last_days]
+        
+        if df_filtered.empty:
+            logging.warning("The filtered dataframe is empty.")
+        
+        logging.info("Grouping by 'FarmName' and 'Date' to count activities.")
+        df_counts = df_filtered.groupby(['FarmName', 'Date']).size().reset_index(name='Activity')
+        
+        logging.info("Grouping by 'FarmName' to count unique dates with activities.")
+        df_counts = df_counts.groupby('FarmName').size().reset_index(name='Activity')
+        
+        logging.info("Creating the line chart.")
+        fig = px.line(df_counts, x='FarmName', y='Activity', title=f'Activities per FarmName in {time_frame}')
+        fig.update_layout(xaxis_title='FarmName', yaxis_title='Number of Activities')
+        
+        logging.info("Line chart created successfully.")
+        return fig
     
-    if time_frame == 'Last 2 Days':
-        last_days = datetime.now() - timedelta(days=2)
-    elif time_frame == 'Last Week':
-        last_days = datetime.now() - timedelta(days=7)
-    elif time_frame == 'Last Month':
-        last_days = datetime.now() - timedelta(days=30)
-    
-    df_filtered = df[df['Date'] >= last_days]
-    
-    df_counts = df_filtered.groupby(['FarmName', 'Date']).size().reset_index(name='Activity')
-    
-    df_counts = df_counts.groupby('FarmName').size().reset_index(name='Activity')
-    
-    fig = px.line(df_counts, x='FarmName', y='Activity', title=f'Activities per FarmName in {time_frame}')
-    fig.update_layout(xaxis_title='FarmName', yaxis_title='Number of Activities')
-    
-    return fig
+    except Exception as e:
+        logging.error(f"An error occurred: {e}")
+        raise
 
 def create_dot_plot(df):
     df = df.astype(str)
