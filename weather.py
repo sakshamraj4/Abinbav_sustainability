@@ -239,7 +239,7 @@ def create_stacked_bar_chart(df):
                      'Current': 'yellow', 
                      'Some Alert or not reached to this stage': 'red'
                  },
-                 title="Status Counts per Column in Growth Tracker",
+                 title="Growth Tracker Summary",
                  labels={'index': 'Columns'})
     return fig
 
