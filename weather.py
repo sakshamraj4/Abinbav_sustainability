@@ -86,7 +86,7 @@ def create_bar_plots(df):
             fig.update_layout(
                 xaxis_title="Count",
                 yaxis_title="Status",
-                title=f"Counts for {column}",
+                title=f"{column}",
                 showlegend=False
             )
             st.plotly_chart(fig)
@@ -121,7 +121,7 @@ def create_line_chart(df, time_frame):
         df_counts = df_counts.groupby('FarmName').size().reset_index(name='Activity')
         
         logging.info("Creating the line chart.")
-        fig = px.line(df_counts, x='FarmName', y='Activity', title=f'Activities per FarmName in {time_frame}')
+        fig = px.line(df_counts, x='FarmName', y='Activity', title=f'Activities per Plot in {time_frame}')
         fig.update_layout(xaxis_title='FarmName', yaxis_title='Number of Activities')
         
         logging.info("Line chart created successfully.")
