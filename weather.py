@@ -68,8 +68,8 @@ def create_line_chart(df, time_frame):
         if df['Date'].isnull().any():
             logging.warning("There are NaT values in 'Date' column after conversion.")
         
-        if time_frame == 'Last 2 Days':
-            last_days = datetime.now() - timedelta(days=2)
+        #if time_frame == 'Last 2 Days':
+        #    last_days = datetime.now() - timedelta(days=2)
         elif time_frame == 'Last Week':
             last_days = datetime.now() - timedelta(days=7)
         elif time_frame == 'Last Month':
@@ -262,7 +262,7 @@ elif choice == 'Plot level Summary':
     st.title("Plot level Summarization")
     st.header("Plot Visit Summary by Field Team")
 
-    time_frame_options = ['Last 2 Days', 'Last Week', 'Last Month']
+    time_frame_options = ['Last Week', 'Last Month']
     selected_time_frame = st.selectbox('Select Time Frame', time_frame_options)
     
     fig = create_line_chart(new_data_df, selected_time_frame)
