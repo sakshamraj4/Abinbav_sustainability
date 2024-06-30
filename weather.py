@@ -2,7 +2,10 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 from datetime import datetime, timedelta
+import plotly.graph_objs as go
+import matplotlib.pyplot as plt
 import logging
+import plotly.figure_factory as ff
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
@@ -39,7 +42,8 @@ def password_protection():
 
 password_protection()
 
-st.markdown("""
+st.markdown(
+    """
     <style>
     body {
         background-color: #ffffff;
@@ -47,6 +51,11 @@ st.markdown("""
     }
     .stApp {
         background-color: #ffffff;
+    }
+    .box-container {
+        display: flex;
+        justify-content: space-around;
+        flex-wrap: wrap;
     }
     .box {
         background-color: #ffffff;
@@ -56,19 +65,28 @@ st.markdown("""
         margin: 10px;
         text-align: center;
         box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1);
-        width: 200px;
-        height: 230px;
+        width: 150px;
+        height: 180px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
     }
     .box h2 {
         color: #333;
         margin-bottom: 10px;
+        font-size: 1em;
     }
     .box p {
         font-size: 1.5em;
         color: #555;
+        margin: 0;
     }
     </style>
-""", unsafe_allow_html=True)
+    """,
+    unsafe_allow_html=True
+)
+
 
 def create_bar_plots(df):
     for column in df.columns:
@@ -90,6 +108,42 @@ def create_bar_plots(df):
                 showlegend=False
             )
             st.plotly_chart(fig)
+            
+def create_activity_progress_plot():
+    data = [
+        dict(Task='Sowing', Start='2024-05-15', Finish='2024-05-20', Done='59', NotDone='0'),
+        dict(Task='DAP / MOP Fertilizer', Start='2024-05-15', Finish='2024-05-20', Done='59', NotDone='0'),
+        dict(Task='Weeding 1', Start='2024-06-05', Finish='2024-06-11', Done='59', NotDone='0'),
+        dict(Task='Irrigation 1', Start='2024-06-13', Finish='2024-06-15', Done='59', NotDone='0'),
+        dict(Task='Urea 1', Start='2024-06-15', Finish='2024-06-17', Done='59', NotDone='0'),
+        dict(Task='Weeding 2', Start='2024-06-28', Finish='2024-07-01', Done='6', NotDone='53')
+    ]
+
+    data_combined = []
+    for item in data:
+        data_combined.append(dict(Task=item['Task'], Start=item['Start'], Finish=item['Finish'], Resource='Done: ' + item['Done'], Done=item['Done']))
+        data_combined.append(dict(Task=item['Task'], Start=item['Start'], Finish=item['Finish'], Resource='Not Done: ' + item['NotDone'], Done=item['NotDone']))
+
+    fig = ff.create_gantt(data_combined, index_col='Resource', group_tasks=True, showgrid_x=True, showgrid_y=True)
+
+    for bar in fig['data']:
+        if 'Done' in bar['name']:
+            bar['marker']['color'] = 'green'
+            bar['hoverinfo'] = 'text+name'
+            bar['text'] = [item['Done'] for item in data_combined if item['Resource'] == bar['name']]
+            bar['textposition'] = 'middle center'
+        elif 'Not Done' in bar['name']:
+            bar['marker']['color'] = 'red'
+            bar['hoverinfo'] = 'text+name'
+            bar['text'] = [item['Done'] for item in data_combined if item['Resource'] == bar['name']]
+            bar['textposition'] = 'middle center'
+
+    fig.update_layout(
+        xaxis_title="Date",
+        yaxis_title="Activity"
+    )
+
+    st.plotly_chart(fig)
 
 def create_line_chart(df, time_frame):
     try:
@@ -101,15 +155,17 @@ def create_line_chart(df, time_frame):
         
         if time_frame == 'Last 2 Days':
             last_days = datetime.now() - timedelta(days=2)
+            df_filtered = df[df['Date'] >= last_days]
         elif time_frame == 'Last Week':
             last_days = datetime.now() - timedelta(days=7)
+            df_filtered = df[df['Date'] >= last_days]
         elif time_frame == 'Last Month':
             last_days = datetime.now() - timedelta(days=30)
+            df_filtered = df[df['Date'] >= last_days]
+        elif time_frame == 'Visit Till Date':
+            df_filtered = df[df['Date'] <= datetime.now()]
         else:
             raise ValueError("Invalid time_frame value provided.")
-        
-        logging.info(f"Filtering dataframe for the last {time_frame.lower()}.")
-        df_filtered = df[df['Date'] >= last_days]
         
         if df_filtered.empty:
             logging.warning("The filtered dataframe is empty.")
@@ -186,7 +242,7 @@ def create_dot_plot_1(df):
                         color = 'red'
                 except ValueError:
                     pass
-            elif column in ['Weeding 1', 'Irrigation 1']:
+            elif column in ['Weeding 1', 'Irrigation 1', 'Weeding 2']:
                 if value.strip() and value.lower() not in ['nan', '0', 'null']:
                     color = 'green'
                 else:
@@ -210,7 +266,7 @@ def create_dot_plot_1(df):
     # Update the trace names for the legend
     fig.for_each_trace(lambda t: t.update(name={
         'green': 'well and pop Followed', 
-        'red': 'pop not followed or details not present'
+        'red': 'pop not followed or Activity not Done'
     }[t.name]))
 
     fig.update_layout(height=1500)
@@ -278,6 +334,8 @@ growth_data_csv_url = "https://raw.githubusercontent.com/sakshamraj4/Abinbav_sus
 growth_data_df = pd.read_csv(growth_data_csv_url)
 weather_data_url = "https://raw.githubusercontent.com/sakshamraj4/Abinbav_sustainability/main//weather_data.csv"
 weather_df = pd.read_csv(weather_data_url)
+activity_progress_url = 'https://github.com/sakshamraj4/Abinbav_sustainability/raw/main/crop_monitorig_protocol.csv'
+activity_progress_df = pd.read_csv(activity_progress_url)
 
 menu_options = ['Organisation level Summary', 'Plot level Summary']
 choice = st.sidebar.selectbox('Go to', menu_options)
@@ -298,29 +356,63 @@ if choice == 'Organisation level Summary':
         st.markdown('<div class="box"><h2>Average Urea1 Rate</h2><p>7.01</p></div>', unsafe_allow_html=True)
     with col6:
         st.markdown('<div class="box"><h2>Average Urea2 Rate</h2><p>N/A</p></div>', unsafe_allow_html=True)
+        
+    
+    st.title("Crop Monitoring Observation")
+    create_activity_progress_plot()
+    
+    st.header("Activity Progress")
     create_bar_plots(activity_df)
     
     st.header("Growth Tracker Status")
     fig = create_stacked_bar_chart(growth_tracker_df)
     st.plotly_chart(fig)
+    
+    st.download_button(
+        label="Download Data Entered via app",
+        data=new_data_df.to_csv(index=False).encode('utf-8'),
+        file_name='Daily_visit_data.csv',
+        mime='text/csv'
+    )
 
 elif choice == 'Plot level Summary':
     st.title("Plot level Summarization")
     st.header("Plot Visit Summary by Field Team")
 
-    time_frame_options = ['Last Week', 'Last Month']
+    time_frame_options = ['Last Week', 'Last Month', 'Visit Till Date']
     selected_time_frame = st.selectbox('Select Time Frame', time_frame_options)
     
     fig = create_line_chart(new_data_df, selected_time_frame)
     st.plotly_chart(fig)
     
+    st.download_button(
+        label="Download Daily visit Data",
+        data=new_data_df.to_csv(index=False).encode('utf-8'),
+        file_name='Daily_visit_data.csv',
+        mime='text/csv'
+    )
+    
     st.subheader("Weather Trends")
     fig_weather = plot_weather_trends(weather_df)
     st.plotly_chart(fig_weather)
     
+    st.download_button(
+        label="Download Weather Data",
+        data=weather_df.to_csv(index=False).encode('utf-8'),
+        file_name='Weather_data.csv',
+        mime='text/csv'
+    )
+    
     st.header("Growth Tracker Data")
     fig = create_dot_plot(growth_tracker_df)
     st.plotly_chart(fig)
+    
+    st.download_button(
+        label="Download Growth Stage Data",
+        data=growth_tracker_df.to_csv(index=False).encode('utf-8'),
+        file_name='growth_tracker_data.csv',
+        mime='text/csv'
+    )
     
     fig = create_dot_plot_1(growth_data_df)
     st.plotly_chart(fig)
@@ -328,3 +420,10 @@ elif choice == 'Plot level Summary':
     if clicked_farm_name:
         st.subheader(f"Detail view for Farm Name: {clicked_farm_name}")
         st.write(f"You clicked on {clicked_farm_name}. Add detailed view here.")
+        
+    st.download_button(
+        label="Download Activity Status Data",
+        data=growth_data_df.to_csv(index=False).encode('utf-8'),
+        file_name='activity_tracker_data.csv',
+        mime='text/csv'
+    )
