@@ -74,7 +74,7 @@ def create_bar_plots(df):
     for column in df.columns:
         if column not in ['Tillage Operation', 'Farm Name']:
             st.subheader(f"{column}")
-            total_count = df.shape[0] - 1
+            total_count = df.shape[0]
             done_count = df[df[column].isin(['Done', 'Done early', 'Done on time'])].shape[0]
             df_plot = pd.DataFrame({
                 'Status': ['Total', 'Done and Pop Followed'],
