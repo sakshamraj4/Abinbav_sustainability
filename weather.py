@@ -336,6 +336,8 @@ weather_data_url = "https://raw.githubusercontent.com/sakshamraj4/Abinbav_sustai
 weather_df = pd.read_csv(weather_data_url)
 activity_progress_url = 'https://github.com/sakshamraj4/Abinbav_sustainability/raw/main/crop_monitorig_protocol.csv'
 activity_progress_df = pd.read_csv(activity_progress_url)
+field_team_url = 'https://raw.githubusercontent.com/sakshamraj4/Abinbav_sustainability/main/field_team_data.csv'
+field_team_df = pd.read_csv(field_team_url)
 
 menu_options = ['Organisation level Summary', 'Plot level Summary']
 choice = st.sidebar.selectbox('Go to', menu_options)
@@ -369,9 +371,16 @@ if choice == 'Organisation level Summary':
     st.plotly_chart(fig)
     
     st.download_button(
-        label="Download Data Entered via app",
+        label="Download Data updated via Field team",
         data=new_data_df.to_csv(index=False).encode('utf-8'),
         file_name='Daily_visit_data.csv',
+        mime='text/csv'
+    )
+    
+    st.download_button(
+        label="Download Data Entered via app",
+        data=field_team_df.to_csv(index=False).encode('utf-8'),
+        file_name='Field_team_updated_data.csv',
         mime='text/csv'
     )
 
