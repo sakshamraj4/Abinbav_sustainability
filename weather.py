@@ -116,7 +116,7 @@ def create_activity_progress_plot():
         dict(Task='Weeding 1', Start='2024-06-05', Finish='2024-06-11', Done='59', NotDone='0'),
         dict(Task='Irrigation 1', Start='2024-06-13', Finish='2024-06-15', Done='59', NotDone='0'),
         dict(Task='Urea 1', Start='2024-06-15', Finish='2024-06-17', Done='59', NotDone='0'),
-        dict(Task='Weeding 2', Start='2024-06-28', Finish='2024-07-01', Done='6', NotDone='53')
+        dict(Task='Weeding 2', Start='2024-06-28', Finish='2024-07-02', Done='6', NotDone='53')
     ]
 
     data_combined = []
@@ -372,14 +372,14 @@ if choice == 'Organisation level Summary':
     
     st.download_button(
         label="Download Data updated via Field team",
-        data=new_data_df.to_csv(index=False).encode('utf-8'),
+        data=field_team_df.to_csv(index=False).encode('utf-8'),
         file_name='Daily_visit_data.csv',
         mime='text/csv'
     )
     
     st.download_button(
         label="Download Data Entered via app",
-        data=field_team_df.to_csv(index=False).encode('utf-8'),
+        data=new_data_df.to_csv(index=False).encode('utf-8'),
         file_name='Field_team_updated_data.csv',
         mime='text/csv'
     )
