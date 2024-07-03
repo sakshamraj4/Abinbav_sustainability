@@ -6,6 +6,7 @@ import plotly.graph_objs as go
 import matplotlib.pyplot as plt
 import logging
 import plotly.figure_factory as ff
+import altair as alt
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
@@ -92,7 +93,7 @@ def create_bar_plots(df):
     for column in df.columns:
         if column not in ['Tillage Operation', 'Farm Name']:
             st.subheader(f"{column}")
-            total_count = df.shape[0]
+            total_count = df.shape[0] - 1
             done_count = df[df[column].isin(['Done', 'Done early', 'Done on time'])].shape[0]
             df_plot = pd.DataFrame({
                 'Status': ['Total', 'Done and Pop Followed'],
@@ -108,6 +109,37 @@ def create_bar_plots(df):
                 showlegend=False
             )
             st.plotly_chart(fig)
+            
+def plot_severity_counts(df, sort_by='specific_order'):
+    df['Date'] = pd.to_datetime(df['Date'], dayfirst=True)
+    latest_records = df.loc[df.groupby('farmName')['Date'].idxmax()]
+    severity_counts = latest_records['Severity'].value_counts().reset_index()
+    severity_counts.columns = ['Severity', 'Count']
+
+    color_scale = alt.Scale(
+        domain=['Low', 'medium', 'high'],
+        range=['green', 'yellow', 'red']
+    )
+
+    if sort_by == 'specific_order':
+        severity_order = ['Low', 'medium', 'high']
+        x_encoding = alt.X('Severity:O', sort=severity_order)
+    elif sort_by == 'count':
+        severity_counts = severity_counts.sort_values(by='Count', ascending=False)
+        x_encoding = alt.X('Severity:O', sort='-y')
+    else:
+        raise ValueError("sort_by must be either 'specific_order' or 'count'")
+
+    bar_chart = alt.Chart(severity_counts).mark_bar().encode(
+        x=x_encoding,
+        y='Count:Q',
+        color=alt.Color('Severity:N', scale=color_scale),
+        tooltip=['Severity', 'Count']
+    ).properties(
+        title='Count of Severity Levels in Latest Records for Each Farm'
+    )
+
+    st.altair_chart(bar_chart, use_container_width=True)
             
 def create_activity_progress_plot():
     data = [
@@ -144,6 +176,32 @@ def create_activity_progress_plot():
     )
 
     st.plotly_chart(fig)
+    
+def severity_dot_plot(data):
+    color_map = {'Low': 'green', 'medium': 'yellow', 'high': 'red'}
+    data['Color'] = data['Severity'].map(color_map)
+
+    fig = px.scatter(
+        data,
+        x='Severity',
+        y='farmName',
+        color='Severity',
+        color_discrete_map=color_map,
+        hover_data=['Date']
+    )
+
+    # Customize plot
+    fig.update_traces(marker=dict(size=10))
+    fig.update_layout(
+        xaxis_title='Severity',
+        yaxis_title='Farm Name',
+        yaxis=dict(tickmode='array', tickvals=data['farmName'].unique(), ticktext=data['farmName'].unique()),
+        legend_title='Severity'
+    )
+
+    fig.update_layout(height=1500)
+    fig.update_traces(marker=dict(size=10), selector=dict(mode='markers'))
+    return fig
 
 def create_line_chart(df, time_frame):
     try:
@@ -225,13 +283,16 @@ def create_dot_plot(df):
 def create_dot_plot_1(df):
     df = df.astype(str)
     dot_data = []
-    columns_to_process = list(df.columns)
+    columns_to_process = list(df.columns)    
     if 'Farm Name' in columns_to_process:
-        columns_to_process.remove('Farm Name')
+        columns_to_process.remove('Farm Name')   
     for column in columns_to_process:
         for idx, value in enumerate(df[column]):
             color = None
-            if column in ['Sowing', 'M0P/DAP', 'UREA 1']:
+            value_lower = value.lower().strip()           
+            if value_lower == "inprogress":
+                color = 'green'
+            elif column in ['Sowing', 'M0P/DAP', 'UREA 1']:
                 try:
                     numeric_value = float(value.replace(',', '').split()[0])
                     if (column == 'Sowing' and 7.5 <= numeric_value <= 8.5) or \
@@ -243,35 +304,29 @@ def create_dot_plot_1(df):
                 except ValueError:
                     pass
             elif column in ['Weeding 1', 'Irrigation 1', 'Weeding 2', 'Pest & Disease Control_1_Fungicide']:
-                if value.strip() and value.lower() not in ['nan', '0', 'null']:
+                if value_lower not in ['nan', '0', 'null', '']:
                     color = 'green'
                 else:
-                    color = 'red'
+                    color = 'red'            
             if color:
                 farm_name = df['Farm Name'][idx]
                 farm_link = f"<a href='https://farmimage.streamlit.app/?farm_name={farm_name}' target='_blank'>{farm_name}</a>"
-                dot_data.append({'Column': column, 'FarmName': farm_link, 'Value': value, 'Color': color})
-    
+                dot_data.append({'Column': column, 'FarmName': farm_link, 'Value': value, 'Color': color})    
     dot_df = pd.DataFrame(dot_data)
     dot_df['Column'] = pd.Categorical(dot_df['Column'], categories=columns_to_process, ordered=True)
-    dot_df = dot_df.sort_values(by='Column')
-    
+    dot_df = dot_df.sort_values(by='Column')    
     fig = px.scatter(dot_df, x='Column', y='FarmName', color='Color',
                      color_discrete_map={'green': 'green', 'red': 'red'},
                      title="Plot wise Activity Summary",
                      category_orders={'Column': columns_to_process},
                      labels={'FarmName': 'Farm Name'},
-                     hover_data={'Value': True, 'FarmName': False, 'Color': False})
-    
-    # Update the trace names for the legend
+                     hover_data={'Value': True, 'FarmName': False, 'Color': False})    
     fig.for_each_trace(lambda t: t.update(name={
         'green': 'well and pop Followed', 
         'red': 'pop not followed or Activity not Done'
     }[t.name]))
-
     fig.update_layout(height=1500)
-    fig.update_traces(marker=dict(size=10), selector=dict(mode='markers'))
-    
+    fig.update_traces(marker=dict(size=10), selector=dict(mode='markers'))    
     return fig
 
 def create_stacked_bar_chart(df):
@@ -338,6 +393,8 @@ activity_progress_url = 'https://github.com/sakshamraj4/Abinbav_sustainability/r
 activity_progress_df = pd.read_csv(activity_progress_url)
 field_team_url = 'https://raw.githubusercontent.com/sakshamraj4/Abinbav_sustainability/main/field_team_data.csv'
 field_team_df = pd.read_csv(field_team_url)
+data_path = 'https://raw.githubusercontent.com/sakshamraj4/Abinbav_sustainability/main/risk_level.csv'
+risk_summary_df = pd.read_csv(data_path)
 
 menu_options = ['Organisation level Summary', 'Plot level Summary']
 choice = st.sidebar.selectbox('Go to', menu_options)
@@ -362,6 +419,9 @@ if choice == 'Organisation level Summary':
     
     st.title("Crop Monitoring Observation")
     create_activity_progress_plot()
+    
+    st.title('Risk Summary')
+    plot_severity_counts(risk_summary_df, sort_by='specific_order')
     
     st.header("Activity Progress")
     create_bar_plots(activity_df)
@@ -436,3 +496,7 @@ elif choice == 'Plot level Summary':
         file_name='activity_tracker_data.csv',
         mime='text/csv'
     )
+    
+    st.title('Plot wise Risk Summary')
+    fig = severity_dot_plot(risk_summary_df)
+    st.plotly_chart(fig)
