@@ -93,7 +93,7 @@ def create_bar_plots(df):
     for column in df.columns:
         if column not in ['Tillage Operation', 'Farm Name']:
             st.subheader(f"{column}")
-            total_count = df.shape[0] - 1
+            total_count = df.shape[0]
             done_count = df[df[column].isin(['Done', 'Done early', 'Done on time'])].shape[0]
             df_plot = pd.DataFrame({
                 'Status': ['Total', 'Done and Pop Followed'],
@@ -143,31 +143,37 @@ def plot_severity_counts(df, sort_by='specific_order'):
             
 def create_activity_progress_plot():
     data = [
-        dict(Task='Sowing', Start='2024-05-15', Finish='2024-05-20', Done='59', NotDone='0'),
         dict(Task='DAP / MOP Fertilizer', Start='2024-05-15', Finish='2024-05-20', Done='59', NotDone='0'),
+        dict(Task='Sowing', Start='2024-05-15', Finish='2024-05-20', Done='59', NotDone='0'),
         dict(Task='Weeding 1', Start='2024-06-05', Finish='2024-06-11', Done='59', NotDone='0'),
         dict(Task='Irrigation 1', Start='2024-06-13', Finish='2024-06-15', Done='59', NotDone='0'),
         dict(Task='Urea 1', Start='2024-06-15', Finish='2024-06-17', Done='59', NotDone='0'),
-        dict(Task='Weeding 2', Start='2024-06-28', Finish='2024-07-02', Done='6', NotDone='53')
+        dict(Task='Weeding 2', Start='2024-06-28', Finish='2024-07-04', Done='17', NotDone='42'),
+        dict(Task='Irrigation 2', Start='2024-07-01', Finish='2024-07-05', Done='59', NotDone='0'),
+        dict(Task='Fungicide Spray', Start='2024-07-01', Finish='2024-07-04', Done='2', NotDone='57')
     ]
 
     data_combined = []
     for item in data:
-        data_combined.append(dict(Task=item['Task'], Start=item['Start'], Finish=item['Finish'], Resource='Done: ' + item['Done'], Done=item['Done']))
-        data_combined.append(dict(Task=item['Task'], Start=item['Start'], Finish=item['Finish'], Resource='Not Done: ' + item['NotDone'], Done=item['NotDone']))
+        if item['NotDone'] == '0' and item['Done'] == '59':
+            color = 'green'
+        else:
+            color = 'orange'
+        
+        data_combined.append(dict(Task=item['Task'], Start=item['Start'], Finish=item['Finish'], Resource=color, Done=item['Done']))
 
-    fig = ff.create_gantt(data_combined, index_col='Resource', group_tasks=True, showgrid_x=True, showgrid_y=True)
+    fig = ff.create_gantt(data_combined, index_col='Resource', group_tasks=True, showgrid_x=True, showgrid_y=True, colors={'green': 'rgb(0, 255, 0)', 'orange': 'rgb(255, 165, 0)'})
 
     for bar in fig['data']:
-        if 'Done' in bar['name']:
-            bar['marker']['color'] = 'green'
+        if bar['name'] == 'green':
+            bar['marker']['color'] = 'rgb(0, 255, 0)'
             bar['hoverinfo'] = 'text+name'
-            bar['text'] = [item['Done'] for item in data_combined if item['Resource'] == bar['name']]
+            bar['text'] = [item['Done'] for item in data_combined if item['Resource'] == 'green']
             bar['textposition'] = 'middle center'
-        elif 'Not Done' in bar['name']:
-            bar['marker']['color'] = 'red'
+        elif bar['name'] == 'red':
+            bar['marker']['color'] = 'rgb(255, 0, 0)'
             bar['hoverinfo'] = 'text+name'
-            bar['text'] = [item['Done'] for item in data_combined if item['Resource'] == bar['name']]
+            bar['text'] = [item['Done'] for item in data_combined if item['Resource'] == 'orange']
             bar['textposition'] = 'middle center'
 
     fig.update_layout(
@@ -285,13 +291,15 @@ def create_dot_plot_1(df):
     dot_data = []
     columns_to_process = list(df.columns)    
     if 'Farm Name' in columns_to_process:
-        columns_to_process.remove('Farm Name')   
+        columns_to_process.remove('Farm Name')
+    
     for column in columns_to_process:
         for idx, value in enumerate(df[column]):
             color = None
-            value_lower = value.lower().strip()           
+            value_lower = value.lower().strip()
+            
             if value_lower == "inprogress":
-                color = 'green'
+                color = 'yellow'
             elif column in ['Sowing', 'M0P/DAP', 'UREA 1']:
                 try:
                     numeric_value = float(value.replace(',', '').split()[0])
@@ -303,30 +311,37 @@ def create_dot_plot_1(df):
                         color = 'red'
                 except ValueError:
                     pass
-            elif column in ['Weeding 1', 'Irrigation 1', 'Weeding 2', 'Pest & Disease Control_1_Fungicide']:
+            elif column in ['Weeding 1', 'Irrigation 1', 'Weeding 2', 'Pest & Disease Control_1_Fungicide', 'Irrigation 2']:
                 if value_lower not in ['nan', '0', 'null', '']:
                     color = 'green'
                 else:
-                    color = 'red'            
+                    color = 'red'
+            
             if color:
                 farm_name = df['Farm Name'][idx]
                 farm_link = f"<a href='https://farmimage.streamlit.app/?farm_name={farm_name}' target='_blank'>{farm_name}</a>"
-                dot_data.append({'Column': column, 'FarmName': farm_link, 'Value': value, 'Color': color})    
+                dot_data.append({'Column': column, 'FarmName': farm_link, 'Value': value, 'Color': color})
+    
     dot_df = pd.DataFrame(dot_data)
     dot_df['Column'] = pd.Categorical(dot_df['Column'], categories=columns_to_process, ordered=True)
-    dot_df = dot_df.sort_values(by='Column')    
+    dot_df = dot_df.sort_values(by='Column')
+    
     fig = px.scatter(dot_df, x='Column', y='FarmName', color='Color',
-                     color_discrete_map={'green': 'green', 'red': 'red'},
+                     color_discrete_map={'green': 'green', 'red': 'red', 'yellow': 'yellow'},
                      title="Plot wise Activity Summary",
                      category_orders={'Column': columns_to_process},
                      labels={'FarmName': 'Farm Name'},
-                     hover_data={'Value': True, 'FarmName': False, 'Color': False})    
+                     hover_data={'Value': True, 'FarmName': False, 'Color': False})
+    
     fig.for_each_trace(lambda t: t.update(name={
         'green': 'well and pop Followed', 
-        'red': 'pop not followed or Activity not Done'
+        'red': 'pop not followed or Activity not Done',
+        'yellow': 'in progress'
     }[t.name]))
+    
     fig.update_layout(height=1500)
-    fig.update_traces(marker=dict(size=10), selector=dict(mode='markers'))    
+    fig.update_traces(marker=dict(size=10), selector=dict(mode='markers'))
+    
     return fig
 
 def create_stacked_bar_chart(df):
