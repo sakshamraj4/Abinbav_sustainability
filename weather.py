@@ -139,42 +139,55 @@ def plot_severity_counts(df, sort_by='specific_order'):
         title='Count of Severity Levels in Latest Records for Each Farm'
     )
 
+    # Adding text inside bars
+    text = bar_chart.mark_text(
+        align='center',
+        baseline='middle',
+        dx=0,  # shift text horizontally to center
+        dy=-5  # shift text vertically to center
+    ).encode(
+        text=alt.Text('Count:Q', format='.0f'),  # format to integer
+    )
+
+    # Layering text on top of bars
+    bar_chart = (bar_chart + text).properties(
+        width=alt.Step(60)  # adjust the width of the bars as needed
+    )
+
     st.altair_chart(bar_chart, use_container_width=True)
-            
+    
 def create_activity_progress_plot():
     data = [
-        dict(Task='DAP / MOP Fertilizer', Start='2024-05-15', Finish='2024-05-20', Done='59', NotDone='0'),
-        dict(Task='Sowing', Start='2024-05-15', Finish='2024-05-20', Done='59', NotDone='0'),
-        dict(Task='Weeding 1', Start='2024-06-05', Finish='2024-06-11', Done='59', NotDone='0'),
-        dict(Task='Irrigation 1', Start='2024-06-13', Finish='2024-06-15', Done='59', NotDone='0'),
-        dict(Task='Urea 1', Start='2024-06-15', Finish='2024-06-17', Done='59', NotDone='0'),
-        dict(Task='Weeding 2', Start='2024-06-28', Finish='2024-07-04', Done='17', NotDone='42'),
-        dict(Task='Irrigation 2', Start='2024-07-01', Finish='2024-07-05', Done='59', NotDone='0'),
-        dict(Task='Fungicide Spray', Start='2024-07-01', Finish='2024-07-04', Done='2', NotDone='57')
+        dict(Task='DAP / MOP Fertilizer', Start='2024-05-15', Finish='2024-05-20', Done='59', NotDone='0', Status='done'),
+        dict(Task='Sowing', Start='2024-05-15', Finish='2024-05-20', Done='59', NotDone='0', Status='done'),
+        dict(Task='Weeding 1', Start='2024-06-05', Finish='2024-06-11', Done='59', NotDone='0', Status='done'),
+        dict(Task='Irrigation 1', Start='2024-06-13', Finish='2024-06-15', Done='59', NotDone='0', Status='done'),
+        dict(Task='Urea 1', Start='2024-06-15', Finish='2024-06-17', Done='59', NotDone='0', Status='done'),
+        dict(Task='Weeding 2', Start='2024-06-28', Finish='2024-07-04', Done='17', NotDone='42', Status='done'),
+        dict(Task='Irrigation 2', Start='2024-07-01', Finish='2024-07-05', Done='59', NotDone='0', Status='done'),
+        dict(Task='Fungicide Spray', Start='2024-07-01', Finish='2024-07-02', Done='2', NotDone='57', Status='done'),
+        dict(Task='Herbicide Spray', Start='2024-07-09', Finish='2024-07-12', Done='59', NotDone='0', Status='done'),
+        dict(Task='Fungicide Spray 2', Start='2024-07-16', Finish='2024-07-17', Done='8', NotDone='51', Status='done'),
+        dict(Task='Irrigation 3', Start='2024-07-17', Finish='2024-07-18', Done='59', NotDone='0', Status='done')
     ]
 
     data_combined = []
     for item in data:
-        if item['NotDone'] == '0' and item['Done'] == '59':
+        if item['NotDone'] == '0':
             color = 'green'
+        elif item['Status'] == 'ongoing':
+            color = 'red'
         else:
             color = 'orange'
         
-        data_combined.append(dict(Task=item['Task'], Start=item['Start'], Finish=item['Finish'], Resource=color, Done=item['Done']))
+        data_combined.append(dict(Task=item['Task'], Start=item['Start'], Finish=item['Finish'], Resource=color, Done=item['Done'], NotDone=item['NotDone']))
 
-    fig = ff.create_gantt(data_combined, index_col='Resource', group_tasks=True, showgrid_x=True, showgrid_y=True, colors={'green': 'rgb(0, 255, 0)', 'orange': 'rgb(255, 165, 0)'})
+    fig = ff.create_gantt(data_combined, index_col='Resource', group_tasks=True, showgrid_x=True, showgrid_y=True, colors={'green': 'rgb(0, 255, 0)', 'orange': 'rgb(255, 165, 0)', 'red': 'rgb(255, 0, 0)'})
 
-    for bar in fig['data']:
-        if bar['name'] == 'green':
-            bar['marker']['color'] = 'rgb(0, 255, 0)'
-            bar['hoverinfo'] = 'text+name'
-            bar['text'] = [item['Done'] for item in data_combined if item['Resource'] == 'green']
-            bar['textposition'] = 'middle center'
-        elif bar['name'] == 'red':
-            bar['marker']['color'] = 'rgb(255, 0, 0)'
-            bar['hoverinfo'] = 'text+name'
-            bar['text'] = [item['Done'] for item in data_combined if item['Resource'] == 'orange']
-            bar['textposition'] = 'middle center'
+    for bar, item in zip(fig['data'], data_combined):
+        bar['marker']['color'] = bar['marker']['line']['color']  # maintain bar outline color
+        bar['hoverinfo'] = 'text'
+        bar['text'] = f"Start: {item['Start']}<br>Finish: {item['Finish']}<br>NotDone: {item['NotDone']}"  # set text inside the bar
 
     fig.update_layout(
         xaxis_title="Date",
@@ -186,27 +199,26 @@ def create_activity_progress_plot():
 def severity_dot_plot(data):
     color_map = {'Low': 'green', 'medium': 'yellow', 'high': 'red'}
     data['Color'] = data['Severity'].map(color_map)
-
+    data['Farm Name HTML'] = data.apply(lambda row: f"<a href='https://riskchart.streamlit.app/?farmName={row['farmName'].replace(' ', '+')}' target='_blank'>{row['farmName']}</a>", axis=1)
     fig = px.scatter(
         data,
         x='Severity',
-        y='farmName',
+        y='Farm Name HTML',  # Use HTML links here
         color='Severity',
         color_discrete_map=color_map,
-        hover_data=['Date']
+        hover_data=['Date']  # Include 'Date' in hover data
     )
 
-    # Customize plot
-    fig.update_traces(marker=dict(size=10))
+    fig.update_traces(
+        hovertemplate="<b>Severity:</b> %{x}<br><b>Farm Name:</b> %{customdata[1]}<br><b>Date:</b> %{customdata[0]}"
+    )
     fig.update_layout(
         xaxis_title='Severity',
         yaxis_title='Farm Name',
-        yaxis=dict(tickmode='array', tickvals=data['farmName'].unique(), ticktext=data['farmName'].unique()),
         legend_title='Severity'
     )
-
     fig.update_layout(height=1500)
-    fig.update_traces(marker=dict(size=10), selector=dict(mode='markers'))
+    fig.update_traces(marker=dict(size=10), selector=dict(mode='markers'))    
     return fig
 
 def create_line_chart(df, time_frame):
@@ -311,7 +323,7 @@ def create_dot_plot_1(df):
                         color = 'red'
                 except ValueError:
                     pass
-            elif column in ['Weeding 1', 'Irrigation 1', 'Weeding 2', 'Pest & Disease Control_1_Fungicide', 'Irrigation 2']:
+            elif column in ['Weeding 1', 'Irrigation 1', 'Weeding 2', 'Pest & Disease Control_1_Fungicide', 'Irrigation 2', 'Herbiside', 'Pest & Disease Control_1_fungicide_2', 'Irrigation 3']:
                 if value_lower not in ['nan', '0', 'null', '']:
                     color = 'green'
                 else:
