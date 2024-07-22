@@ -168,7 +168,8 @@ def create_activity_progress_plot():
         dict(Task='Fungicide Spray', Start='2024-07-01', Finish='2024-07-02', Done='2', NotDone='57', Status='done'),
         dict(Task='Herbicide Spray', Start='2024-07-09', Finish='2024-07-12', Done='59', NotDone='0', Status='done'),
         dict(Task='Fungicide Spray 2', Start='2024-07-16', Finish='2024-07-17', Done='8', NotDone='51', Status='done'),
-        dict(Task='Irrigation 3', Start='2024-07-17', Finish='2024-07-18', Done='59', NotDone='0', Status='done')
+        dict(Task='Irrigation 3', Start='2024-07-17', Finish='2024-07-18', Done='59', NotDone='0', Status='done'),
+        dict(Task='Urea 2', Start='2024-07-17', Finish='2024-07-18', Done='51', NotDone='8', Status='ongoing')
     ]
 
     data_combined = []
@@ -441,7 +442,7 @@ if choice == 'Organisation level Summary':
     with col5:
         st.markdown('<div class="box"><h2>Average Urea1 Rate</h2><p>7.01</p></div>', unsafe_allow_html=True)
     with col6:
-        st.markdown('<div class="box"><h2>Average Urea2 Rate</h2><p>N/A</p></div>', unsafe_allow_html=True)
+        st.markdown('<div class="box"><h2>Average Urea2 Rate</h2><p>7.00</p></div>', unsafe_allow_html=True)
         
     
     st.title("Crop Monitoring Observation")
