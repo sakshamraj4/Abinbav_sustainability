@@ -324,7 +324,7 @@ def create_dot_plot_1(df):
                         color = 'red'
                 except ValueError:
                     pass
-            elif column in ['Weeding 1', 'Irrigation 1', 'Weeding 2', 'Pest & Disease Control_1_Fungicide', 'Irrigation 2', 'Herbiside', 'Pest & Disease Control_1_fungicide_2', 'Irrigation 3', 'UREA2']:
+            elif column in ['Weeding 1', 'Irrigation 1', 'Weeding 2', 'Pest & Disease Control_1_Fungicide', 'Irrigation 2', 'Herbiside', 'Pest & Disease Control_1_fungicide_2', 'Irrigation 3', 'UREA 2']:
                 if value_lower not in ['nan', '0', 'null', '']:
                     color = 'green'
                 else:
