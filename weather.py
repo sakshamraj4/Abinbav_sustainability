@@ -198,28 +198,38 @@ def create_activity_progress_plot():
     st.plotly_chart(fig)
     
 def severity_dot_plot(data):
+    data['Date'] = pd.to_datetime(data['Date'], format='%d/%m/%Y')
     color_map = {'Low': 'green', 'medium': 'yellow', 'high': 'red'}
-    data['Color'] = data['Severity'].map(color_map)
-    data['Farm Name HTML'] = data.apply(lambda row: f"<a href='https://riskchart.streamlit.app/?farmName={row['farmName'].replace(' ', '+')}' target='_blank'>{row['farmName']}</a>", axis=1)
+    medium_high = data[data['Severity'].isin(['medium', 'high'])]
+    low_latest = data[data['Severity'] == 'Low'].sort_values('Date').groupby('farmName').tail(1)
+    filtered_data = pd.concat([medium_high, low_latest]).sort_values('Date')
+    filtered_data['Color'] = filtered_data['Severity'].map(color_map)
+    filtered_data['Farm Name HTML'] = filtered_data.apply(
+        lambda row: f"<a href='https://riskchart.streamlit.app/?farmName={row['farmName'].replace(' ', '+')}' target='_blank'>{row['farmName']}</a>",
+        axis=1
+    )
+    filtered_data['CustomData'] = filtered_data.apply(
+        lambda row: (row['Date'].strftime('%d/%m/%Y'), row['Severity'], row['Note'], row['farmName']),
+        axis=1
+    )
     fig = px.scatter(
-        data,
-        x='Severity',
+        filtered_data,
+        x='Date',  # Plot against Date to show all entries
         y='Farm Name HTML',  # Use HTML links here
         color='Severity',
         color_discrete_map=color_map,
-        hover_data=['Date']  # Include 'Date' in hover data
+        hover_data={'Date': False, 'Severity': False, 'Note': False, 'Farm Name HTML': False, 'CustomData': False}
     )
-
     fig.update_traces(
-        hovertemplate="<b>Severity:</b> %{x}<br><b>Farm Name:</b> %{customdata[1]}<br><b>Date:</b> %{customdata[0]}"
+        hovertemplate="<b>Severity:</b> %{customdata[1]}<br><b>Farm Name:</b> %{customdata[3]}<br><b>Date:</b> %{customdata[0]}<br><b>Note:</b> %{customdata[2]}"
     )
     fig.update_layout(
-        xaxis_title='Severity',
+        xaxis_title='Date',
         yaxis_title='Farm Name',
-        legend_title='Severity'
+        legend_title='Severity',
+        height=1500
     )
-    fig.update_layout(height=1500)
-    fig.update_traces(marker=dict(size=10), selector=dict(mode='markers'))    
+    fig.update_traces(marker=dict(size=10), selector=dict(mode='markers'))
     return fig
 
 def create_line_chart(df, time_frame):
