@@ -390,7 +390,7 @@ def plot_weather_trends(weather_df):
     weather_df['temp_max_C'] = kelvin_to_celsius(weather_df['temp_max'])
     weather_df['temp_min_C'] = kelvin_to_celsius(weather_df['temp_min'])
     weather_df['clouds_normalized'] = weather_df['clouds'] / 100.0
-    #weather_df['snow_emoji'] = weather_df['snow'].apply(lambda x: '❄️' if x > 0 else '')
+    weather_df['snow_emoji'] = weather_df['snow'].apply(lambda x: '❄️' if x > 0 else '')
     weather_df['rain_emoji'] = weather_df['rain'].apply(lambda x: '🌧️' if x > 0 else '')
     weather_df['clouds_emoji'] = weather_df['clouds_normalized'].apply(lambda x: '☁️' if x > 0.5 else '')
     fig = px.line(weather_df, x='dt', y=['temp_max_C', 'temp_min_C'],
