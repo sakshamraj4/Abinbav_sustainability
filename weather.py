@@ -165,11 +165,10 @@ def create_activity_progress_plot():
         dict(Task='Urea 1', Start='2024-06-15', Finish='2024-06-17', Done='59', NotDone='0', Status='done'),
         dict(Task='Weeding 2', Start='2024-06-28', Finish='2024-07-04', Done='17', NotDone='42', Status='done'),
         dict(Task='Irrigation 2', Start='2024-07-01', Finish='2024-07-05', Done='59', NotDone='0', Status='done'),
-        dict(Task='Fungicide Spray', Start='2024-07-01', Finish='2024-07-02', Done='2', NotDone='57', Status='done'),
+        dict(Task='Fungicide Spray', Start='2024-07-01', Finish='2024-07-25', Done='15', NotDone='44', Status='ongoing'),
         dict(Task='Herbicide Spray', Start='2024-07-09', Finish='2024-07-12', Done='59', NotDone='0', Status='done'),
-        dict(Task='Fungicide Spray 2', Start='2024-07-16', Finish='2024-07-17', Done='8', NotDone='51', Status='done'),
         dict(Task='Irrigation 3', Start='2024-07-17', Finish='2024-07-22', Done='59', NotDone='0', Status='done'),
-        dict(Task='Urea 2', Start='2024-07-20', Finish='2024-07-23', Done='51', NotDone='8', Status='ongoing')
+        dict(Task='Urea 2', Start='2024-07-20', Finish='2024-07-24', Done='59', NotDone='0', Status='done')
     ]
 
     data_combined = []
@@ -334,7 +333,7 @@ def create_dot_plot_1(df):
                         color = 'red'
                 except ValueError:
                     pass
-            elif column in ['Weeding 1', 'Irrigation 1', 'Weeding 2', 'Pest & Disease Control_1_Fungicide', 'Irrigation 2', 'Herbiside', 'Pest & Disease Control_1_fungicide_2', 'Irrigation 3', 'UREA 2']:
+            elif column in ['Weeding 1', 'Irrigation 1', 'Weeding 2', 'Pest & Disease Control_Fungicide', 'Irrigation 2', 'Herbiside', 'Irrigation 3', 'UREA 2']:
                 if value_lower not in ['nan', '0', 'null', '']:
                     color = 'green'
                 else:
