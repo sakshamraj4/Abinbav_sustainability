@@ -178,21 +178,30 @@ def create_activity_progress_plot():
         elif item['Status'] == 'ongoing':
             color = 'red'
         else:
-            color = 'orange'     
+            color = 'orange'
+        
         data_combined.append(dict(Task=item['Task'], Start=item['Start'], Finish=item['Finish'], Resource=color, Done=item['Done'], NotDone=item['NotDone']))
+
     fig = ff.create_gantt(data_combined, index_col='Resource', group_tasks=True, showgrid_x=True, showgrid_y=True, colors={'green': 'rgb(0, 255, 0)', 'orange': 'rgb(255, 165, 0)', 'red': 'rgb(255, 0, 0)'})
+
+    # Debug information
+    print("Data Combined Length:", len(data_combined))
+    print("Fig Data Length:", len(fig['data']))
+
     # Update hover text
     for i, item in enumerate(data_combined):
-        bar = fig['data'][i]
-        if 'text' in bar:
+        if i < len(fig['data']):
+            bar = fig['data'][i]
+            bar['hoverinfo'] = 'text'
             bar['text'] = f"Task: {item['Task']}<br>Start: {item['Start']}<br>Finish: {item['Finish']}<br>Done: {item['Done']}<br>NotDone: {item['NotDone']}"
         else:
-            bar['text'] = f"Task: {item['Task']}<br>Start: {item['Start']}<br>Finish: {item['Finish']}<br>Done: {item['Done']}<br>NotDone: {item['NotDone']}"      
-        bar['hoverinfo'] = 'text'
+            print(f"Index {i} out of range for fig['data']")
+
     fig.update_layout(
         xaxis_title="Date",
         yaxis_title="Activity"
     )
+
     st.plotly_chart(fig)
 
 def severity_dot_plot(data):
