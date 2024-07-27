@@ -179,21 +179,17 @@ def create_activity_progress_plot():
             color = 'red'
         else:
             color = 'orange'
-        
+            
         data_combined.append(dict(Task=item['Task'], Start=item['Start'], Finish=item['Finish'], Resource=color, Done=item['Done'], NotDone=item['NotDone']))
-
     fig = ff.create_gantt(data_combined, index_col='Resource', group_tasks=True, showgrid_x=True, showgrid_y=True, colors={'green': 'rgb(0, 255, 0)', 'orange': 'rgb(255, 165, 0)', 'red': 'rgb(255, 0, 0)'})
-
     for bar, item in zip(fig['data'], data_combined):
         bar['marker']['color'] = bar['marker']['line']['color']  # maintain bar outline color
         bar['hoverinfo'] = 'text'
-        bar['text'] = f"Start: {item['Start']}<br>Finish: {item['Finish']}<br>NotDone: {item['NotDone']}"  # set text inside the bar
-
+        bar['text'] = f"Task: {item['Task']}<br>Start: {item['Start']}<br>Finish: {item['Finish']}<br>Done: {item['Done']}<br>NotDone: {item['NotDone']}"  # set text inside the bar
     fig.update_layout(
         xaxis_title="Date",
         yaxis_title="Activity"
     )
-
     st.plotly_chart(fig)
     
 def severity_dot_plot(data):
