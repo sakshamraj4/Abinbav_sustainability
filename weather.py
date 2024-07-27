@@ -158,50 +158,38 @@ def plot_severity_counts(df, sort_by='specific_order'):
 
 def create_activity_progress_plot():
     data = [
-        dict(Task='DAP / MOP Fertilizer', Start='2024-05-15', Finish='2024-05-20', Done='59', NotDone='0', Status='done'),
-        dict(Task='Sowing', Start='2024-05-15', Finish='2024-05-20', Done='59', NotDone='0', Status='done'),
-        dict(Task='Weeding 1', Start='2024-06-05', Finish='2024-06-11', Done='59', NotDone='0', Status='done'),
-        dict(Task='Irrigation 1', Start='2024-06-13', Finish='2024-06-15', Done='59', NotDone='0', Status='done'),
-        dict(Task='Urea 1', Start='2024-06-15', Finish='2024-06-17', Done='59', NotDone='0', Status='done'),
-        dict(Task='Weeding 2', Start='2024-06-28', Finish='2024-07-04', Done='17', NotDone='42', Status='done'),
-        dict(Task='Irrigation 2', Start='2024-07-01', Finish='2024-07-05', Done='59', NotDone='0', Status='done'),
-        dict(Task='Fungicide Spray', Start='2024-07-01', Finish='2024-07-25', Done='15', NotDone='44', Status='ongoing'),
-        dict(Task='Herbicide Spray', Start='2024-07-09', Finish='2024-07-12', Done='59', NotDone='0', Status='done'),
-        dict(Task='Irrigation 3', Start='2024-07-17', Finish='2024-07-22', Done='59', NotDone='0', Status='done'),
-        dict(Task='Urea 2', Start='2024-07-20', Finish='2024-07-24', Done='59', NotDone='0', Status='done')
+        dict(Task='DAP / MOP Fertilizer', Start='2024-05-15', Finish='2024-05-20', Done=59, NotDone=0, Status='done'),
+        dict(Task='Sowing', Start='2024-05-15', Finish='2024-05-20', Done=59, NotDone=0, Status='done'),
+        dict(Task='Weeding 1', Start='2024-06-05', Finish='2024-06-11', Done=59, NotDone=0, Status='done'),
+        dict(Task='Irrigation 1', Start='2024-06-13', Finish='2024-06-15', Done=59, NotDone=0, Status='done'),
+        dict(Task='Urea 1', Start='2024-06-15', Finish='2024-06-17', Done=59, NotDone=0, Status='done'),
+        dict(Task='Weeding 2', Start='2024-06-28', Finish='2024-07-04', Done=17, NotDone=42, Status='done'),
+        dict(Task='Irrigation 2', Start='2024-07-01', Finish='2024-07-05', Done=59, NotDone=0, Status='done'),
+        dict(Task='Fungicide Spray', Start='2024-07-01', Finish='2024-07-25', Done=15, NotDone=44, Status='ongoing'),
+        dict(Task='Herbicide Spray', Start='2024-07-09', Finish='2024-07-12', Done=59, NotDone=0, Status='done'),
+        dict(Task='Irrigation 3', Start='2024-07-17', Finish='2024-07-22', Done=59, NotDone=0, Status='done'),
+        dict(Task='Urea 2', Start='2024-07-20', Finish='2024-07-24', Done=59, NotDone=0, Status='done')
     ]
-
     data_combined = []
     for item in data:
-        if item['NotDone'] == '0':
+        if item['NotDone'] == 0:
             color = 'green'
         elif item['Status'] == 'ongoing':
             color = 'red'
         else:
-            color = 'orange'
-        
-        data_combined.append(dict(Task=item['Task'], Start=item['Start'], Finish=item['Finish'], Resource=color, Done=item['Done'], NotDone=item['NotDone']))
-
+            color = 'orange'      
+        hover_text = (f"Task: {item['Task']}<br>"
+                      f"Start: {item['Start']}<br>"
+                      f"Finish: {item['Finish']}<br>"
+                      f"Done: {item['Done']}<br>"
+                      f"NotDone: {item['NotDone']}<br>"
+                      f"NotDone Count: {item['NotDone']}")  # Adding NotDone Count        
+        data_combined.append(dict(Task=item['Task'], Start=item['Start'], Finish=item['Finish'], Resource=color, Done=item['Done'], NotDone=item['NotDone'], hovertext=hover_text))
     fig = ff.create_gantt(data_combined, index_col='Resource', group_tasks=True, showgrid_x=True, showgrid_y=True, colors={'green': 'rgb(0, 255, 0)', 'orange': 'rgb(255, 165, 0)', 'red': 'rgb(255, 0, 0)'})
-
-    # Debug information
-    print("Data Combined Length:", len(data_combined))
-    print("Fig Data Length:", len(fig['data']))
-
-    # Update hover text
-    for i, item in enumerate(data_combined):
-        if i < len(fig['data']):
-            bar = fig['data'][i]
-            bar['hoverinfo'] = 'text'
-            bar['text'] = f"Task: {item['Task']}<br>Start: {item['Start']}<br>Finish: {item['Finish']}<br>Done: {item['Done']}<br>NotDone: {item['NotDone']}"
-        else:
-            print(f"Index {i} out of range for fig['data']")
-
     fig.update_layout(
         xaxis_title="Date",
         yaxis_title="Activity"
     )
-
     st.plotly_chart(fig)
 
 def severity_dot_plot(data):
