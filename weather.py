@@ -1,3 +1,4 @@
+
 import streamlit as st
 import pandas as pd
 import plotly.express as px
@@ -112,17 +113,23 @@ def create_bar_plots(df):
             
 def plot_severity_counts(df, sort_by='specific_order'):
     df['Date'] = pd.to_datetime(df['Date'], dayfirst=True)
+
+    # Get the latest record for each farm
     latest_records = df.loc[df.groupby('farmName')['Date'].idxmax()]
+
+    # Count the occurrences of each severity level
     severity_counts = latest_records['Severity'].value_counts().reset_index()
     severity_counts.columns = ['Severity', 'Count']
 
+    # Updated color scale to include the new severity category
     color_scale = alt.Scale(
-        domain=['Low', 'medium', 'high'],
-        range=['green', 'yellow', 'red']
+        domain=['Low', 'medium', 'high', 'medium-large area affected'],
+        range=['green', 'yellow', 'red', 'orange']  # Add orange for the new category
     )
 
+    # Determine sorting order
     if sort_by == 'specific_order':
-        severity_order = ['Low', 'medium', 'high']
+        severity_order = ['Low', 'medium', 'high', 'medium-large area affected']
         x_encoding = alt.X('Severity:O', sort=severity_order)
     elif sort_by == 'count':
         severity_counts = severity_counts.sort_values(by='Count', ascending=False)
@@ -130,6 +137,7 @@ def plot_severity_counts(df, sort_by='specific_order'):
     else:
         raise ValueError("sort_by must be either 'specific_order' or 'count'")
 
+    # Create the bar chart
     bar_chart = alt.Chart(severity_counts).mark_bar().encode(
         x=x_encoding,
         y='Count:Q',
@@ -154,6 +162,7 @@ def plot_severity_counts(df, sort_by='specific_order'):
         width=alt.Step(60)  # adjust the width of the bars as needed
     )
 
+    # Display the chart
     st.altair_chart(bar_chart, use_container_width=True)
 
 def create_activity_progress_plot():
@@ -194,10 +203,15 @@ def create_activity_progress_plot():
 
 def severity_dot_plot(data):
     data['Date'] = pd.to_datetime(data['Date'], format='%d/%m/%Y')
-    color_map = {'Low': 'green', 'medium': 'yellow', 'high': 'red'}
-    medium_high = data[data['Severity'].isin(['medium', 'high'])]
+    color_map = {
+        'Low': 'green',
+        'medium': 'yellow',
+        'high': 'red',
+        'medium-large area affected': 'orange'  # New category
+    }
+    medium_high_large = data[data['Severity'].isin(['medium', 'high', 'medium-large area affected'])]
     low_latest = data[data['Severity'] == 'Low'].sort_values('Date').groupby('farmName').tail(1)
-    filtered_data = pd.concat([medium_high, low_latest]).sort_values('Date')
+    filtered_data = pd.concat([medium_high_large, low_latest]).sort_values('Date')
     filtered_data['Color'] = filtered_data['Severity'].map(color_map)
     filtered_data['Farm Name HTML'] = filtered_data.apply(
         lambda row: f"<a href='https://riskchart.streamlit.app/?farmName={row['farmName'].replace(' ', '+')}' target='_blank'>{row['farmName']}</a>",
