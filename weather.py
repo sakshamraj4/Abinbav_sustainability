@@ -1,4 +1,3 @@
-
 import streamlit as st
 import pandas as pd
 import plotly.express as px
@@ -210,8 +209,8 @@ def severity_dot_plot(data):
         'medium-large area affected': 'orange'  # New category
     }
     medium_high_large = data[data['Severity'].isin(['medium', 'high', 'medium-large area affected'])]
-    low_latest = data[data['Severity'] == 'Low'].sort_values('Date').groupby('farmName').tail(1)
-    filtered_data = pd.concat([medium_high_large, low_latest]).sort_values('Date')
+    low_all = data[data['Severity'] == 'Low']
+    filtered_data = pd.concat([medium_high_large, low_all]).sort_values('Date')
     filtered_data['Color'] = filtered_data['Severity'].map(color_map)
     filtered_data['Farm Name HTML'] = filtered_data.apply(
         lambda row: f"<a href='https://riskchart.streamlit.app/?farmName={row['farmName'].replace(' ', '+')}' target='_blank'>{row['farmName']}</a>",
