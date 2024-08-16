@@ -173,10 +173,12 @@ def create_activity_progress_plot():
         dict(Task='Urea 1', Start='2024-06-15', Finish='2024-06-17', Done=59, NotDone=0, Status='done'),
         dict(Task='Weeding 2', Start='2024-06-28', Finish='2024-07-04', Done=17, NotDone=42, Status='done'),
         dict(Task='Irrigation 2', Start='2024-07-01', Finish='2024-07-05', Done=59, NotDone=0, Status='done'),
-        dict(Task='Fungicide Spray', Start='2024-07-01', Finish='2024-08-08', Done=59, NotDone=0, Status='done'),
+        dict(Task='Fungicide Spray-1', Start='2024-07-16', Finish='2024-07-25', Done=13, NotDone=46, Status='done'),
         dict(Task='Herbicide Spray', Start='2024-07-09', Finish='2024-07-12', Done=59, NotDone=0, Status='done'),
         dict(Task='Irrigation 3', Start='2024-07-17', Finish='2024-07-22', Done=59, NotDone=0, Status='done'),
-        dict(Task='Urea 2', Start='2024-07-20', Finish='2024-07-24', Done=59, NotDone=0, Status='done')
+        dict(Task='Urea 2', Start='2024-07-20', Finish='2024-07-24', Done=59, NotDone=0, Status='done'),
+        dict(Task='Fungicide Spray-2', Start='2024-08-03', Finish='2024-08-08', Done=59, NotDone=0, Status='done'),
+        dict(Task='Pesticide Spray', Start='2024-08-09', Finish='2024-08-10', Done=8, NotDone=51, Status='done')
     ]
     data_combined = []
     for item in data:
