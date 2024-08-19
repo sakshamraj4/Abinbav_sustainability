@@ -7,14 +7,17 @@ import matplotlib.pyplot as plt
 import logging
 import plotly.figure_factory as ff
 import altair as alt
+import geopandas as gpd
+import folium
+from streamlit_folium import folium_static
+from folium import Popup, GeoJson
+import io
+import zipfile
+from docx import Document
+import base64
 
-# Set up logging
 logging.basicConfig(level=logging.INFO)
-
-# Set up Streamlit page configuration
 st.set_page_config(layout="wide")
-
-# Set up password protection
 PASSWORD = "Abinbev@123"
 
 def password_protection():
@@ -25,11 +28,9 @@ def password_protection():
         else:
             st.session_state["password_correct"] = False
             st.session_state["password_attempts"] += 1
-
     if "password_correct" not in st.session_state:
         st.session_state["password_correct"] = False
         st.session_state["password_attempts"] = 0
-
     if not st.session_state["password_correct"]:
         if st.session_state["password_attempts"] >= 3:
             st.error("Too many incorrect attempts. Please refresh the page to try again.")
@@ -40,7 +41,6 @@ def password_protection():
             elif st.session_state["password_attempts"] > 0:
                 st.error("Password incorrect. Please try again.")
         st.stop()
-
 password_protection()
 
 st.markdown(
@@ -88,6 +88,67 @@ st.markdown(
     unsafe_allow_html=True
 )
 
+def create_map(gdf, zoom_level):
+    if gdf is None:
+        return None
+    center = [gdf.geometry.centroid.y.mean(), gdf.geometry.centroid.x.mean()]
+    m = folium.Map(location=center, zoom_start=zoom_level, control_scale=True)
+    geojson_data = gdf.__geo_interface__
+    
+    for idx, feature in enumerate(geojson_data['features']):
+        severity = feature['properties'].get('Severity Level (L/M/H)', '')
+        color = get_color(severity)
+        simple_fields = {
+            "Name": feature['properties'].get('Name', 'N/A'),
+            "Area (Bigha)": feature['properties'].get('Area (Bigha)', 'N/A'),
+            "Sowing dates": feature['properties'].get('Sowing dates', 'N/A'),
+            "Harvesting Date": feature['properties'].get('Harvesting Date', 'N/A'),
+            "Yield (kg/bigha)": feature['properties'].get('Yield (kg/bigha)', 'N/A'),
+        }
+        all_fields = feature['properties']
+        keys = list(all_fields.keys())
+        values = list(all_fields.values())
+        split_index = len(keys) // 2
+        column1 = ''.join(f'<b>{keys[i]}</b>: {values[i]}<br>' for i in range(split_index))
+        column2 = ''.join(f'<b>{keys[i]}</b>: {values[i]}<br>' for i in range(split_index, len(keys)))
+        simple_tooltip_html = ''.join(f'<b>{key}</b>: {value}<br>' for key, value in simple_fields.items())
+        detailed_tooltip_html = f'''
+        <div style="display: flex;">
+            <div style="width: 50%; padding-right: 15px;">{column1}</div>
+            <div style="width: 50%; padding-left: 15px;">{column2}</div>
+        </div>
+        '''
+        doc_buffer = create_docx_for_plot(feature['properties'])
+        doc_base64 = base64.b64encode(doc_buffer.getvalue()).decode()
+        plot_name = feature['properties'].get('Name', f'plot_{idx + 1}').replace(' ', '_')
+        download_link = f'data:application/vnd.openxmlformats-officedocument.wordprocessingml.document;base64,{doc_base64}'
+        tooltip_html = f'''
+        <div style="display: flex; flex-wrap: wrap; width: 600px; font-size: 14px; background-color: #fff; border-radius: 8px; padding: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+            <div id="simpleView" style="display: block;">{simple_tooltip_html}<a href="#" onclick="document.getElementById('simpleView').style.display='none';document.getElementById('detailedView').style.display='block';return false;">Show Details</a></div>
+            <div id="detailedView" style="display: none;">{detailed_tooltip_html}</div>
+            <div><a href="{download_link}" download="{plot_name}.docx">Download DOCX</a></div>
+        </div>
+        '''
+        folium.GeoJson(
+            feature,
+            style_function=lambda x, color=color: {'fillColor': color, 'color': color, 'weight': 2, 'fillOpacity': 0.6},
+            popup=Popup(tooltip_html, max_width=600)
+        ).add_to(m)
+    
+    folium.LayerControl().add_to(m)
+    return m
+    
+def load_geojson(file_path):
+    try:
+        gdf = gpd.read_file(file_path)
+        if gdf.empty:
+            st.error("GeoDataFrame is empty. Please check the GeoJSON file.")
+        for column in gdf.select_dtypes(include=['datetime', 'timedelta']).columns:
+            gdf[column] = gdf[column].dt.strftime('%Y-%m-%d')
+        return gdf
+    except Exception as e:
+        st.error(f"Error loading GeoJSON file: {e}")
+        return None
 
 def create_bar_plots(df):
     for column in df.columns:
@@ -110,23 +171,47 @@ def create_bar_plots(df):
             )
             st.plotly_chart(fig)
             
+def get_color(severity):
+    if severity == "Low":
+        return "green"
+    elif severity == "Medium":
+        return "yellow"
+    elif severity == "High":
+        return "red"
+    else:
+        return "gray"
+
+def create_docx_for_plot(plot_data):
+    doc = Document()
+    doc.add_heading(f"Plot Details - {plot_data.get('Name', 'Unnamed Plot')}", 0)
+    for key, value in plot_data.items():
+        if key != "geometry":
+            doc.add_paragraph(f"{key}: {value}")
+    doc_buffer = io.BytesIO()
+    doc.save(doc_buffer)
+    doc_buffer.seek(0)
+    return doc_buffer
+
+def create_zip_file(gdf):
+    zip_buffer = io.BytesIO()
+    with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zipf:
+        for idx, row in gdf.iterrows():
+            plot_data = row.to_dict()
+            doc_buffer = create_docx_for_plot(plot_data)
+            plot_name = plot_data.get('Name', f'plot_{idx + 1}').replace(' ', '_')
+            zipf.writestr(f"{plot_name}.docx", doc_buffer.getvalue())
+    zip_buffer.seek(0)
+    return zip_buffer
+            
 def plot_severity_counts(df, sort_by='specific_order'):
     df['Date'] = pd.to_datetime(df['Date'], dayfirst=True)
-
-    # Get the latest record for each farm
     latest_records = df.loc[df.groupby('farmName')['Date'].idxmax()]
-
-    # Count the occurrences of each severity level
     severity_counts = latest_records['Severity'].value_counts().reset_index()
     severity_counts.columns = ['Severity', 'Count']
-
-    # Updated color scale to include the new severity category
     color_scale = alt.Scale(
         domain=['Low', 'medium', 'high', 'medium-large area affected'],
         range=['green', 'yellow', 'red', 'orange']  # Add orange for the new category
     )
-
-    # Determine sorting order
     if sort_by == 'specific_order':
         severity_order = ['Low', 'medium', 'high', 'medium-large area affected']
         x_encoding = alt.X('Severity:O', sort=severity_order)
@@ -135,8 +220,6 @@ def plot_severity_counts(df, sort_by='specific_order'):
         x_encoding = alt.X('Severity:O', sort='-y')
     else:
         raise ValueError("sort_by must be either 'specific_order' or 'count'")
-
-    # Create the bar chart
     bar_chart = alt.Chart(severity_counts).mark_bar().encode(
         x=x_encoding,
         y='Count:Q',
@@ -145,8 +228,6 @@ def plot_severity_counts(df, sort_by='specific_order'):
     ).properties(
         title='Count of Severity Levels in Latest Records for Each Farm'
     )
-
-    # Adding text inside bars
     text = bar_chart.mark_text(
         align='center',
         baseline='middle',
@@ -155,13 +236,9 @@ def plot_severity_counts(df, sort_by='specific_order'):
     ).encode(
         text=alt.Text('Count:Q', format='.0f'),  # format to integer
     )
-
-    # Layering text on top of bars
     bar_chart = (bar_chart + text).properties(
-        width=alt.Step(60)  # adjust the width of the bars as needed
+        width=alt.Step(60)
     )
-
-    # Display the chart
     st.altair_chart(bar_chart, use_container_width=True)
 
 def create_activity_progress_plot():
@@ -245,11 +322,9 @@ def severity_dot_plot(data):
 def create_line_chart(df, time_frame):
     try:
         logging.info("Converting 'Date' column to datetime format.")
-        df['Date'] = pd.to_datetime(df['Date'], errors='coerce')
-        
+        df['Date'] = pd.to_datetime(df['Date'], errors='coerce')       
         if df['Date'].isnull().any():
-            logging.warning("There are NaT values in 'Date' column after conversion.")
-        
+            logging.warning("There are NaT values in 'Date' column after conversion.")        
         if time_frame == 'Last 2 Days':
             last_days = datetime.now() - timedelta(days=2)
             df_filtered = df[df['Date'] >= last_days]
@@ -262,24 +337,18 @@ def create_line_chart(df, time_frame):
         elif time_frame == 'Visit Till Date':
             df_filtered = df[df['Date'] <= datetime.now()]
         else:
-            raise ValueError("Invalid time_frame value provided.")
-        
+            raise ValueError("Invalid time_frame value provided.")       
         if df_filtered.empty:
-            logging.warning("The filtered dataframe is empty.")
-        
+            logging.warning("The filtered dataframe is empty.")        
         logging.info("Grouping by 'FarmName' and 'Date' to count activities.")
-        df_counts = df_filtered.groupby(['FarmName', 'Date']).size().reset_index(name='Activity')
-        
+        df_counts = df_filtered.groupby(['FarmName', 'Date']).size().reset_index(name='Activity')     
         logging.info("Grouping by 'FarmName' to count unique dates with activities.")
-        df_counts = df_counts.groupby('FarmName').size().reset_index(name='Activity')
-        
+        df_counts = df_counts.groupby('FarmName').size().reset_index(name='Activity')       
         logging.info("Creating the line chart.")
         fig = px.line(df_counts, x='FarmName', y='Activity', title=f'Activities per Plot in {time_frame}')
-        fig.update_layout(xaxis_title='FarmName', yaxis_title='Number of Activities')
-        
+        fig.update_layout(xaxis_title='FarmName', yaxis_title='Number of Activities')       
         logging.info("Line chart created successfully.")
-        return fig
-    
+        return fig    
     except Exception as e:
         logging.error(f"An error occurred: {e}")
         raise
@@ -300,8 +369,7 @@ def create_dot_plot(df):
                 if color:
                     dot_data.append({'Column': column, 'FarmName': df['Farm Name'][idx], 'Value': value, 'Color': color})
     dot_df = pd.DataFrame(dot_data)
-    dot_df = dot_df.sort_values(by='Column')
-    
+    dot_df = dot_df.sort_values(by='Column')  
     fig = px.scatter(dot_df, x='Column', y='FarmName', color='Color', 
                      color_discrete_map={
                          'green': 'green',
@@ -314,7 +382,6 @@ def create_dot_plot(df):
     fig.for_each_trace(lambda t: t.update(name = {'green': 'well and passed', 
                                                   'yellow': 'current stage', 
                                                   'red': 'not in current stage or some Alert'}[t.name]))
-
     fig.update_layout(height=1500)
     fig.update_traces(marker=dict(size=10), selector=dict(mode='markers'))
     return fig
@@ -324,13 +391,11 @@ def create_dot_plot_1(df):
     dot_data = []
     columns_to_process = list(df.columns)    
     if 'Farm Name' in columns_to_process:
-        columns_to_process.remove('Farm Name')
-    
+        columns_to_process.remove('Farm Name')    
     for column in columns_to_process:
         for idx, value in enumerate(df[column]):
             color = None
-            value_lower = value.lower().strip()
-            
+            value_lower = value.lower().strip()            
             if value_lower == "inprogress":
                 color = 'yellow'
             elif column in ['Sowing', 'M0P/DAP', 'UREA 1']:
@@ -348,33 +413,27 @@ def create_dot_plot_1(df):
                 if value_lower not in ['nan', '0', 'null', '']:
                     color = 'green'
                 else:
-                    color = 'red'
-            
+                    color = 'red'           
             if color:
                 farm_name = df['Farm Name'][idx]
                 farm_link = f"<a href='https://farmimage.streamlit.app/?farm_name={farm_name}' target='_blank'>{farm_name}</a>"
-                dot_data.append({'Column': column, 'FarmName': farm_link, 'Value': value, 'Color': color})
-    
+                dot_data.append({'Column': column, 'FarmName': farm_link, 'Value': value, 'Color': color})   
     dot_df = pd.DataFrame(dot_data)
     dot_df['Column'] = pd.Categorical(dot_df['Column'], categories=columns_to_process, ordered=True)
-    dot_df = dot_df.sort_values(by='Column')
-    
+    dot_df = dot_df.sort_values(by='Column')  
     fig = px.scatter(dot_df, x='Column', y='FarmName', color='Color',
                      color_discrete_map={'green': 'green', 'red': 'red', 'yellow': 'yellow'},
                      title="Plot wise Activity Summary",
                      category_orders={'Column': columns_to_process},
                      labels={'FarmName': 'Farm Name'},
-                     hover_data={'Value': True, 'FarmName': False, 'Color': False})
-    
+                     hover_data={'Value': True, 'FarmName': False, 'Color': False})    
     fig.for_each_trace(lambda t: t.update(name={
         'green': 'well and pop Followed', 
         'red': 'pop not followed or Activity not Done',
         'yellow': 'in progress'
-    }[t.name]))
-    
+    }[t.name]))    
     fig.update_layout(height=1500)
-    fig.update_traces(marker=dict(size=10), selector=dict(mode='markers'))
-    
+    fig.update_traces(marker=dict(size=10), selector=dict(mode='markers'))   
     return fig
 
 def create_stacked_bar_chart(df):
@@ -426,7 +485,6 @@ def plot_weather_trends(weather_df):
     fig.update_layout(height=700)
     return fig
 
-# Load data
 activity_data_url = "https://raw.githubusercontent.com/sakshamraj4/Abinbav_sustainability/main/activity_avinbev.csv"
 activity_df = pd.read_csv(activity_data_url)
 new_data_url = "https://raw.githubusercontent.com/sakshamraj4/Abinbav_sustainability/main/data.csv"
@@ -443,13 +501,13 @@ field_team_url = 'https://raw.githubusercontent.com/sakshamraj4/Abinbav_sustaina
 field_team_df = pd.read_csv(field_team_url)
 data_path = 'https://raw.githubusercontent.com/sakshamraj4/Abinbav_sustainability/main/risk_level.csv'
 risk_summary_df = pd.read_csv(data_path)
+GEOJSON_FILE_PATH = "https://raw.githubusercontent.com/sakshamraj4/Abinbav_sustainability/main/merged.geojson"
 
-menu_options = ['Organisation level Summary', 'Plot level Summary']
+menu_options = ['Organisation level Summary', 'Plot level Summary', 'Map level View']
 choice = st.sidebar.selectbox('Go to', menu_options)
 if choice == 'Organisation level Summary':
     st.title("AB InBev Sustainability Dashboard")
-    st.header("Organisation level Summarrization")
-    
+    st.header("Organisation level Summarrization")    
     col1, col2, col3, col4, col5, col6 = st.columns(6)
     with col1:
         st.markdown('<div class="box"><h2>Total No of Plots</h2><p>59</p></div>', unsafe_allow_html=True)
@@ -462,53 +520,42 @@ if choice == 'Organisation level Summary':
     with col5:
         st.markdown('<div class="box"><h2>Average Urea1 Rate</h2><p>7.01</p></div>', unsafe_allow_html=True)
     with col6:
-        st.markdown('<div class="box"><h2>Average Urea2 Rate</h2><p>7.00</p></div>', unsafe_allow_html=True)
-        
-    
+        st.markdown('<div class="box"><h2>Average Urea2 Rate</h2><p>7.00</p></div>', unsafe_allow_html=True)   
     st.title("Crop Monitoring Observation")
-    create_activity_progress_plot()
-    
+    create_activity_progress_plot()   
     st.title('Risk Summary')
-    plot_severity_counts(risk_summary_df, sort_by='specific_order')
-    
+    plot_severity_counts(risk_summary_df, sort_by='specific_order')    
     st.header("Activity Progress")
-    create_bar_plots(activity_df)
-    
+    create_bar_plots(activity_df)    
     st.header("Growth Tracker Status")
     fig = create_stacked_bar_chart(growth_tracker_df)
-    st.plotly_chart(fig)
-    
+    st.plotly_chart(fig)   
     st.download_button(
         label="Download Data updated via Field team",
         data=field_team_df.to_csv(index=False).encode('utf-8'),
         file_name='Daily_visit_data.csv',
         mime='text/csv'
-    )
-    
+    )   
     st.download_button(
         label="Download Data Entered via app",
         data=new_data_df.to_csv(index=False).encode('utf-8'),
         file_name='Field_team_updated_data.csv',
         mime='text/csv'
     )
-
+    
 elif choice == 'Plot level Summary':
     st.title("Plot level Summarization")
     st.header("Plot Visit Summary by Field Team")
-
     time_frame_options = ['Last Week', 'Last Month', 'Visit Till Date']
-    selected_time_frame = st.selectbox('Select Time Frame', time_frame_options)
-    
+    selected_time_frame = st.selectbox('Select Time Frame', time_frame_options)   
     fig = create_line_chart(new_data_df, selected_time_frame)
-    st.plotly_chart(fig)
-    
+    st.plotly_chart(fig)   
     st.download_button(
         label="Download Daily visit Data",
         data=new_data_df.to_csv(index=False).encode('utf-8'),
         file_name='Daily_visit_data.csv',
         mime='text/csv'
-    )
-    
+    )    
     st.subheader("Weather Trends")
     fig_weather = plot_weather_trends(weather_df)
     st.plotly_chart(fig_weather)
@@ -518,33 +565,100 @@ elif choice == 'Plot level Summary':
         data=weather_df.to_csv(index=False).encode('utf-8'),
         file_name='Weather_data.csv',
         mime='text/csv'
-    )
-    
+    )    
     st.header("Growth Tracker Data")
     fig = create_dot_plot(growth_tracker_df)
-    st.plotly_chart(fig)
-    
+    st.plotly_chart(fig)   
     st.download_button(
         label="Download Growth Stage Data",
         data=growth_tracker_df.to_csv(index=False).encode('utf-8'),
         file_name='growth_tracker_data.csv',
         mime='text/csv'
-    )
-    
+    )   
     fig = create_dot_plot_1(growth_data_df)
     st.plotly_chart(fig)
     clicked_farm_name = st.experimental_get_query_params().get('farm_name', [None])[0]
     if clicked_farm_name:
         st.subheader(f"Detail view for Farm Name: {clicked_farm_name}")
-        st.write(f"You clicked on {clicked_farm_name}. Add detailed view here.")
-        
+        st.write(f"You clicked on {clicked_farm_name}. Add detailed view here.")      
     st.download_button(
         label="Download Activity Status Data",
         data=growth_data_df.to_csv(index=False).encode('utf-8'),
         file_name='activity_tracker_data.csv',
         mime='text/csv'
-    )
-    
+    )   
     st.title('Plot wise Risk Summary')
     fig = severity_dot_plot(risk_summary_df)
     st.plotly_chart(fig)
+    
+elif choice == 'Map level View':
+    st.title("Map level View")
+    st.sidebar.title("Options")
+    zoom_level = st.sidebar.slider("Zoom Level", 1, 20, 15)
+    severity_filter = st.sidebar.multiselect("Filter by Severity", ["Low", "Medium", "High"], default=["Low", "Medium", "High"])
+    
+    st.markdown(
+        """
+        <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f9f9f9;
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+        .stButton>button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            margin: 10px 0;
+            cursor: pointer;
+            border-radius: 5px;
+            transition: background-color 0.3s ease;
+        }
+        .stButton>button:hover {
+            background-color: #0056b3;
+        }
+        .download-button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            margin: 10px 0;
+            cursor: pointer;
+            border-radius: 5px;
+            transition: background-color 0.3s ease;
+        }
+        .download-button:hover {
+            background-color: #0056b3;
+        }
+        </style>
+        """,
+        unsafe_allow_html=True
+    )
+
+    gdf = load_geojson(GEOJSON_FILE_PATH)
+    if gdf is not None:
+        if severity_filter:
+            gdf = gdf[gdf['Severity Level (L/M/H)'].isin(severity_filter)]
+        map_ = create_map(gdf, zoom_level)
+        if map_:
+            folium_static(map_, width=1200, height=800)
+            zip_buffer = create_zip_file(gdf)
+            zip_base64 = base64.b64encode(zip_buffer.getvalue()).decode()
+            st.markdown(
+                f"""
+                <a class="download-button" href="data:application/zip;base64,{zip_base64}" download="all_plots_data.zip">Download All Data as ZIP</a>
+                """,
+                unsafe_allow_html=True
+            )
