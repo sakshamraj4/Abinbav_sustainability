@@ -1,3 +1,4 @@
+
 import streamlit as st
 import pandas as pd
 import plotly.express as px
@@ -91,20 +92,40 @@ st.markdown(
 def create_map(gdf, zoom_level):
     if gdf is None:
         return None
+
     center = [gdf.geometry.centroid.y.mean(), gdf.geometry.centroid.x.mean()]
     m = folium.Map(location=center, zoom_start=zoom_level, control_scale=True)
     geojson_data = gdf.__geo_interface__
     
+    severity_seed_colors = {
+        ("High", "1207"): "#ff4c4c",   # Red for High Severity and 1207
+        ("High", "8214"): "#e53d3d",   # Slightly darker red for High Severity and 8214
+        ("High", "R&D Plot"): "#c62828", # Even darker red for High Severity and R&D Plot
+
+        ("Medium", "1207"): "#fbc02d", # Yellow for Medium Severity and 1207
+        ("Medium", "8214"): "#f9a825",  # Slightly darker yellow for Medium Severity and 8214
+        ("Medium", "R&D Plot"): "#f57f17", # Even darker yellow for Medium Severity and R&D Plot
+
+        ("Low", "1207"): "#66bb6a",   # Green for Low Severity and 1207
+        ("Low", "8214"): "#43a047",   # Slightly darker green for Low Severity and 8214
+        ("Low", "R&D Plot"): "#388e3c" # Even darker green for Low Severity and R&D Plot
+    }
+    
     for idx, feature in enumerate(geojson_data['features']):
         severity = feature['properties'].get('Severity Level (L/M/H)', '')
-        color = get_color(severity)
+        seed_variety = feature['properties'].get('Seed-Varity', 'N/A')
+        
+        color = severity_seed_colors.get((severity, seed_variety), "gray")
+        
         simple_fields = {
             "Name": feature['properties'].get('Name', 'N/A'),
             "Area (Bigha)": feature['properties'].get('Area (Bigha)', 'N/A'),
             "Sowing dates": feature['properties'].get('Sowing dates', 'N/A'),
             "Harvesting Date": feature['properties'].get('Harvesting Date', 'N/A'),
             "Yield (kg/bigha)": feature['properties'].get('Yield (kg/bigha)', 'N/A'),
+            "Seed Variety": seed_variety
         }
+        
         all_fields = feature['properties']
         keys = list(all_fields.keys())
         values = list(all_fields.values())
@@ -118,6 +139,7 @@ def create_map(gdf, zoom_level):
             <div style="width: 50%; padding-left: 15px;">{column2}</div>
         </div>
         '''
+        
         doc_buffer = create_docx_for_plot(feature['properties'])
         doc_base64 = base64.b64encode(doc_buffer.getvalue()).decode()
         plot_name = feature['properties'].get('Name', f'plot_{idx + 1}').replace(' ', '_')
@@ -129,6 +151,7 @@ def create_map(gdf, zoom_level):
             <div><a href="{download_link}" download="{plot_name}.docx">Download DOCX</a></div>
         </div>
         '''
+        
         folium.GeoJson(
             feature,
             style_function=lambda x, color=color: {'fillColor': color, 'color': color, 'weight': 2, 'fillOpacity': 0.6},
@@ -596,6 +619,8 @@ elif choice == 'Map level View':
     st.sidebar.title("Options")
     zoom_level = st.sidebar.slider("Zoom Level", 1, 20, 15)
     severity_filter = st.sidebar.multiselect("Filter by Severity", ["Low", "Medium", "High"], default=["Low", "Medium", "High"])
+    seed_variety_filter = st.sidebar.multiselect("Filter by Seed Varity", ["1207", "8214", "R&D Plot"], default=["1207", "8214", "R&D Plot"])
+    
     
     st.markdown(
         """
@@ -651,6 +676,8 @@ elif choice == 'Map level View':
     if gdf is not None:
         if severity_filter:
             gdf = gdf[gdf['Severity Level (L/M/H)'].isin(severity_filter)]
+        if seed_variety_filter:
+            gdf = gdf[gdf['Seed-Varity'].isin(seed_variety_filter)]
         map_ = create_map(gdf, zoom_level)
         if map_:
             folium_static(map_, width=1200, height=800)
