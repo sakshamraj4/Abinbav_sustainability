@@ -614,8 +614,7 @@ elif choice == 'Plot level Summary':
     fig = severity_dot_plot(risk_summary_df)
     st.plotly_chart(fig)
     
-
- elif choice == 'Map level View':
+elif choice == 'Map level View':
     st.title("Map level View")
     st.sidebar.title("Options")
     zoom_level = st.sidebar.slider("Zoom Level", 1, 20, 15)
