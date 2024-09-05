@@ -618,11 +618,11 @@ elif choice == 'Plot level Summary':
 elif choice == 'Map level View':
     st.title("Map level View")
     st.sidebar.title("Options")
+    
     zoom_level = st.sidebar.slider("Zoom Level", 1, 20, 15)
-    severity_filter = st.sidebar.multiselect("Filter by Mature Stage", ["early", "ontime", "late"], default=["early", "ontime", "late"])
-    seed_variety_filter = st.sidebar.multiselect("Filter by Seed Varity", ["1207", "8214", "R&D Plot"], default=["1207", "8214", "R&D Plot"])
-    
-    
+    mature_stage_filter = st.sidebar.multiselect("Filter by Mature Stage", ["early", "ontime", "late"], default=["early", "ontime", "late"])
+    seed_variety_filter = st.sidebar.multiselect("Filter by Seed Variety", ["1207", "8214", "R&D Plot"], default=["1207", "8214", "R&D Plot"])
+
     st.markdown(
         """
         <style>
@@ -678,7 +678,7 @@ elif choice == 'Map level View':
         if mature_stage_filter:
             gdf = gdf[gdf['Mature Stage'].isin(mature_stage_filter)]
         if seed_variety_filter:
-            gdf = gdf[gdf['Seed-Varity'].isin(seed_variety_filter)]
+            gdf = gdf[gdf['Seed-Variety'].isin(seed_variety_filter)]
         map_ = create_map(gdf, zoom_level)
         if map_:
             folium_static(map_, width=1200, height=800)
