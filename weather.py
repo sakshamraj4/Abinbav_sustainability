@@ -96,28 +96,27 @@ def create_map(gdf, zoom_level):
     center = [gdf.geometry.centroid.y.mean(), gdf.geometry.centroid.x.mean()]
     m = folium.Map(location=center, zoom_start=zoom_level, control_scale=True)
     geojson_data = gdf.__geo_interface__
+    
+    severity_seed_colors = {
+        ("High", "1207"): "#ff4c4c",   # Red for High Severity and 1207
+        ("High", "8214"): "#e53d3d",   # Slightly darker red for High Severity and 8214
+        ("High", "R&D Plot"): "#c62828", # Even darker red for High Severity and R&D Plot
 
-    # Define color mapping based on Mature Stage and Seed Variety
-    mature_stage_seed_colors = {
-        ("early", "1207"): "#ffeb3b",   # Yellow for Early Stage and 1207
-        ("early", "8214"): "#fbc02d",   # Slightly darker yellow for Early Stage and 8214
-        ("early", "R&D Plot"): "#f9a825", # Even darker yellow for Early Stage and R&D Plot
+        ("Medium", "1207"): "#fbc02d", # Yellow for Medium Severity and 1207
+        ("Medium", "8214"): "#f9a825",  # Slightly darker yellow for Medium Severity and 8214
+        ("Medium", "R&D Plot"): "#f57f17", # Even darker yellow for Medium Severity and R&D Plot
 
-        ("ontime", "1207"): "#4caf50",  # Green for On-time Stage and 1207
-        ("ontime", "8214"): "#388e3c",  # Slightly darker green for On-time Stage and 8214
-        ("ontime", "R&D Plot"): "#2e7d32", # Even darker green for On-time Stage and R&D Plot
-
-        ("late", "1207"): "#f44336",   # Red for Late Stage and 1207
-        ("late", "8214"): "#c62828",   # Slightly darker red for Late Stage and 8214
-        ("late", "R&D Plot"): "#b71c1c" # Even darker red for Late Stage and R&D Plot
+        ("Low", "1207"): "#66bb6a",   # Green for Low Severity and 1207
+        ("Low", "8214"): "#43a047",   # Slightly darker green for Low Severity and 8214
+        ("Low", "R&D Plot"): "#388e3c" # Even darker green for Low Severity and R&D Plot
     }
-
+    
     for idx, feature in enumerate(geojson_data['features']):
-        mature_stage = feature['properties'].get('Mature Stage', '')
+        severity = feature['properties'].get('Severity Level (L/M/H)', '')
         seed_variety = feature['properties'].get('Seed-Varity', 'N/A')
-
-        color = mature_stage_seed_colors.get((mature_stage, seed_variety), "gray")
-
+        
+        color = severity_seed_colors.get((severity, seed_variety), "gray")
+        
         simple_fields = {
             "Name": feature['properties'].get('Name', 'N/A'),
             "Area (Bigha)": feature['properties'].get('Area (Bigha)', 'N/A'),
@@ -126,7 +125,7 @@ def create_map(gdf, zoom_level):
             "Yield (kg/bigha)": feature['properties'].get('Yield (kg/bigha)', 'N/A'),
             "Seed Variety": seed_variety
         }
-
+        
         all_fields = feature['properties']
         keys = list(all_fields.keys())
         values = list(all_fields.values())
@@ -140,7 +139,7 @@ def create_map(gdf, zoom_level):
             <div style="width: 50%; padding-left: 15px;">{column2}</div>
         </div>
         '''
-
+        
         doc_buffer = create_docx_for_plot(feature['properties'])
         doc_base64 = base64.b64encode(doc_buffer.getvalue()).decode()
         plot_name = feature['properties'].get('Name', f'plot_{idx + 1}').replace(' ', '_')
@@ -152,13 +151,13 @@ def create_map(gdf, zoom_level):
             <div><a href="{download_link}" download="{plot_name}.docx">Download DOCX</a></div>
         </div>
         '''
-
+        
         folium.GeoJson(
             feature,
             style_function=lambda x, color=color: {'fillColor': color, 'color': color, 'weight': 2, 'fillOpacity': 0.6},
-            popup=folium.Popup(tooltip_html, max_width=600)
+            popup=Popup(tooltip_html, max_width=600)
         ).add_to(m)
-
+    
     folium.LayerControl().add_to(m)
     return m
     
@@ -615,14 +614,15 @@ elif choice == 'Plot level Summary':
     fig = severity_dot_plot(risk_summary_df)
     st.plotly_chart(fig)
     
-elif choice == 'Map level View':
+
+ elif choice == 'Map level View':
     st.title("Map level View")
     st.sidebar.title("Options")
-    
     zoom_level = st.sidebar.slider("Zoom Level", 1, 20, 15)
-    mature_stage_filter = st.sidebar.multiselect("Filter by Mature Stage", ["early", "ontime", "late"], default=["early", "ontime", "late"])
-    seed_variety_filter = st.sidebar.multiselect("Filter by Seed Variety", ["1207", "8214", "R&D Plot"], default=["1207", "8214", "R&D Plot"])
-
+    severity_filter = st.sidebar.multiselect("Filter by Severity", ["Low", "Medium", "High"], default=["Low", "Medium", "High"])
+    seed_variety_filter = st.sidebar.multiselect("Filter by Seed Varity", ["1207", "8214", "R&D Plot"], default=["1207", "8214", "R&D Plot"])
+    
+    
     st.markdown(
         """
         <style>
@@ -674,37 +674,19 @@ elif choice == 'Map level View':
     )
 
     gdf = load_geojson(GEOJSON_FILE_PATH)
-    
-    # Print column names and first few rows
-    st.write("Available columns in GeoDataFrame:", gdf.columns)
-    st.write("First few rows of GeoDataFrame:", gdf.head())
-    
     if gdf is not None:
-        # Strip column names of extra spaces
-        gdf.columns = gdf.columns.str.strip()
-
-        # Verify column existence
-        if 'Mature Stage' not in gdf.columns:
-            st.error("Column 'Mature Stage' not found in the GeoDataFrame.")
-        else:
-            # Verify filter values
-            st.write("Applying filter values:", mature_stage_filter)
-            
-            if mature_stage_filter:
-                gdf = gdf[gdf['Mature Stage'].isin(mature_stage_filter)]
-            if seed_variety_filter:
-                gdf = gdf[gdf['Seed-Variety'].isin(seed_variety_filter)]
-            
-            st.write("Filtered GeoDataFrame:", gdf.head())
-            
-            map_ = create_map(gdf, zoom_level)
-            if map_:
-                folium_static(map_, width=1200, height=800)
-                zip_buffer = create_zip_file(gdf)
-                zip_base64 = base64.b64encode(zip_buffer.getvalue()).decode()
-                st.markdown(
-                    f"""
-                    <a class="download-button" href="data:application/zip;base64,{zip_base64}" download="all_plots_data.zip">Download All Data as ZIP</a>
-                    """,
-                    unsafe_allow_html=True
-                )
+        if severity_filter:
+            gdf = gdf[gdf['Severity Level (L/M/H)'].isin(severity_filter)]
+        if seed_variety_filter:
+            gdf = gdf[gdf['Seed-Varity'].isin(seed_variety_filter)]
+        map_ = create_map(gdf, zoom_level)
+        if map_:
+            folium_static(map_, width=1200, height=800)
+            zip_buffer = create_zip_file(gdf)
+            zip_base64 = base64.b64encode(zip_buffer.getvalue()).decode()
+            st.markdown(
+                f"""
+                <a class="download-button" href="data:application/zip;base64,{zip_base64}" download="all_plots_data.zip">Download All Data as ZIP</a>
+                """,
+                unsafe_allow_html=True
+            )
