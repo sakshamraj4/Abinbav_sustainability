@@ -674,19 +674,37 @@ elif choice == 'Map level View':
     )
 
     gdf = load_geojson(GEOJSON_FILE_PATH)
+    
+    # Print column names and first few rows
+    st.write("Available columns in GeoDataFrame:", gdf.columns)
+    st.write("First few rows of GeoDataFrame:", gdf.head())
+    
     if gdf is not None:
-        if mature_stage_filter:
-            gdf = gdf[gdf['Mature Stage'].isin(mature_stage_filter)]
-        if seed_variety_filter:
-            gdf = gdf[gdf['Seed-Variety'].isin(seed_variety_filter)]
-        map_ = create_map(gdf, zoom_level)
-        if map_:
-            folium_static(map_, width=1200, height=800)
-            zip_buffer = create_zip_file(gdf)
-            zip_base64 = base64.b64encode(zip_buffer.getvalue()).decode()
-            st.markdown(
-                f"""
-                <a class="download-button" href="data:application/zip;base64,{zip_base64}" download="all_plots_data.zip">Download All Data as ZIP</a>
-                """,
-                unsafe_allow_html=True
-            )
+        # Strip column names of extra spaces
+        gdf.columns = gdf.columns.str.strip()
+
+        # Verify column existence
+        if 'Mature Stage' not in gdf.columns:
+            st.error("Column 'Mature Stage' not found in the GeoDataFrame.")
+        else:
+            # Verify filter values
+            st.write("Applying filter values:", mature_stage_filter)
+            
+            if mature_stage_filter:
+                gdf = gdf[gdf['Mature Stage'].isin(mature_stage_filter)]
+            if seed_variety_filter:
+                gdf = gdf[gdf['Seed-Variety'].isin(seed_variety_filter)]
+            
+            st.write("Filtered GeoDataFrame:", gdf.head())
+            
+            map_ = create_map(gdf, zoom_level)
+            if map_:
+                folium_static(map_, width=1200, height=800)
+                zip_buffer = create_zip_file(gdf)
+                zip_base64 = base64.b64encode(zip_buffer.getvalue()).decode()
+                st.markdown(
+                    f"""
+                    <a class="download-button" href="data:application/zip;base64,{zip_base64}" download="all_plots_data.zip">Download All Data as ZIP</a>
+                    """,
+                    unsafe_allow_html=True
+                )
