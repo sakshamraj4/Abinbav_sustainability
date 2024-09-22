@@ -282,8 +282,8 @@ def create_activity_progress_plot():
         dict(Task='Fungicide Spray-2', Start='2024-08-03', Finish='2024-08-08', Done=59, NotDone=0, Status='done'),
         dict(Task='Pesticide Spray', Start='2024-08-09', Finish='2024-08-10', Done=8, NotDone=51, Status='done'),
         dict(Task='Fungicide Spray-3', Start='2024-09-06', Finish='2024-09-07', Done=1, NotDone=58, Status='done'),
-        dict(Task='Harvesting', Start='2024-09-08', Finish='2024-09-17', Done=35, NotDone=24, Status='ongoing'),
-        dict(Task='Threshing', Start='2024-09-16', Finish='2024-09-18', Done=1, NotDone=58, Status='ongoing')
+        dict(Task='Harvesting', Start='2024-09-08', Finish='2024-09-23', Done=37, NotDone=22, Status='ongoing'),
+        dict(Task='Threshing', Start='2024-09-16', Finish='2024-09-23', Done=13, NotDone=46, Status='ongoing')
     ]
     data_combined = []
     for item in data:
