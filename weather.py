@@ -99,17 +99,17 @@ def create_map(gdf, zoom_level):
 
     # Update colors to reflect mature stages instead of severity
     mature_seed_colors = {
-        ("late", "1207"): "#ff4c4c",    # Red for Late Stage and 1207
-        ("late", "8214"): "#e53d3d",    # Slightly darker red for Late Stage and 8214
-        ("late", "R&D Plot"): "#c62828", # Even darker red for Late Stage and R&D Plot
+        ("Not Harvesting", "1207"): "#ff4c4c",    # Red for Late Stage and 1207
+        ("Not Harvesting", "8214"): "#e53d3d",    # Slightly darker red for Late Stage and 8214
+        ("Not Harvesting", "R&D Plot"): "#c62828", # Even darker red for Late Stage and R&D Plot
 
-        ("mid", "1207"): "#fbc02d",     # Yellow for Mid Stage and 1207
-        ("mid", "8214"): "#f9a825",     # Slightly darker yellow for Mid Stage and 8214
-        ("mid", "R&D Plot"): "#f57f17", # Even darker yellow for Mid Stage and R&D Plot
+        ("Harvesting", "1207"): "#fbc02d",     # Yellow for Mid Stage and 1207
+        ("Harvesting", "8214"): "#f9a825",     # Slightly darker yellow for Mid Stage and 8214
+        ("Harvesting", "R&D Plot"): "#f57f17", # Even darker yellow for Mid Stage and R&D Plot
 
-        ("early", "1207"): "#66bb6a",   # Green for Early Stage and 1207
-        ("early", "8214"): "#43a047",   # Slightly darker green for Early Stage and 8214
-        ("early", "R&D Plot"): "#388e3c" # Even darker green for Early Stage and R&D Plot
+        ("Threshing", "1207"): "#66bb6a",   # Green for Early Stage and 1207
+        ("Threshing", "8214"): "#43a047",   # Slightly darker green for Early Stage and 8214
+        ("Threshing", "R&D Plot"): "#388e3c" # Even darker green for Early Stage and R&D Plot
     }
 
     for idx, feature in enumerate(geojson_data['features']):
@@ -626,7 +626,7 @@ elif choice == 'Map level View':
     st.sidebar.title("Options")
     zoom_level = st.sidebar.slider("Zoom Level", 1, 20, 15)
     # Change filter to Mature Stage
-    mature_stage_filter = st.sidebar.multiselect("Filter by Mature Stage", ["early", "ontime", "late"], default=["early", "ontime", "late"])
+    mature_stage_filter = st.sidebar.multiselect("Filter by Mature Stage", ["Threshing", "Harvesting", "Not Harvesting"], default=["Threshing", "Harvesting", "Not Harvesting"])
     seed_variety_filter = st.sidebar.multiselect("Filter by Seed Variety", ["1207", "8214", "R&D Plot"], default=["1207", "8214", "R&D Plot"])
 
     st.markdown(
