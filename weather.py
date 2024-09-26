@@ -538,7 +538,7 @@ choice = st.sidebar.selectbox('Go to', menu_options)
 if choice == 'Organisation level Summary':
     st.title("AB InBev Sustainability Dashboard")
     st.header("Organisation level Summarrization")    
-    col1, col2, col3, col4, col5, col6 = st.columns(6)
+    col1, col2, col3, col4, col5, col6, col7, col8 = st.columns(8)
     with col1:
         st.markdown('<div class="box"><h2>Total No of Plots</h2><p>59</p></div>', unsafe_allow_html=True)
     with col2:
