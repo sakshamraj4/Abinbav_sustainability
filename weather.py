@@ -554,9 +554,9 @@ if choice == 'Organisation level Summary':
     with col6:
         st.markdown('<div class="box"><h2>Average Urea2 Rate</h2><p>7.00</p></div>', unsafe_allow_html=True)
     with col7:
-        st.markdown('<div class="box"><h2>Expected Yield in kg</h2><p>29141.90</p></div>', unsafe_allow_html=True)
+        st.markdown('<div class="box"><h2>Expected Yield in kg</h2><p>27867.66</p></div>', unsafe_allow_html=True)
     with col8:
-        st.markdown('<div class="box"><h2>Expected Yield in ton</h2><p>32.12</p></div>', unsafe_allow_html=True)
+        st.markdown('<div class="box"><h2>Expected Yield in tonne</h2><p>27.86</p></div>', unsafe_allow_html=True)
     st.title("Crop Monitoring Observation")
     create_activity_progress_plot()   
     st.title('Risk Summary')
