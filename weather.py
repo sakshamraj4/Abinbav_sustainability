@@ -1,4 +1,3 @@
-
 import streamlit as st
 import pandas as pd
 import plotly.express as px
@@ -532,6 +531,9 @@ field_team_df = pd.read_csv(field_team_url)
 data_path = 'https://raw.githubusercontent.com/sakshamraj4/Abinbav_sustainability/main/risk_level.csv'
 risk_summary_df = pd.read_csv(data_path)
 GEOJSON_FILE_PATH = "https://raw.githubusercontent.com/sakshamraj4/Abinbav_sustainability/main/merged.geojson"
+harvest_path = 'https://raw.githubusercontent.com/sakshamraj4/Abinbav_sustainability/main/harvesting.csv'
+harvest_df = pd.read_csv(harvest_path)
+
 
 menu_options = ['Organisation level Summary', 'Plot level Summary', 'Map level View']
 choice = st.sidebar.selectbox('Go to', menu_options)
@@ -579,6 +581,17 @@ if choice == 'Organisation level Summary':
     
 elif choice == 'Plot level Summary':
     st.title("Plot level Summarization")
+
+    st.header("Harvesting Details")
+    harvest_path = 'https://raw.githubusercontent.com/sakshamraj4/Abinbav_sustainability/main/harvesting.csv'
+    harvest_df = pd.read_csv(harvest_path)
+    st.dataframe(harvest_df)
+    st.download_button(
+        label="Download Harvesting Data",
+        data=harvest_df.to_csv(index=False).encode('utf-8'),
+        file_name='harvesting_data.csv',
+        mime='text/csv'
+    )   
     st.header("Plot Visit Summary by Field Team")
     time_frame_options = ['Last Week', 'Last Month', 'Visit Till Date']
     selected_time_frame = st.selectbox('Select Time Frame', time_frame_options)   
@@ -593,24 +606,23 @@ elif choice == 'Plot level Summary':
     st.subheader("Weather Trends")
     fig_weather = plot_weather_trends(weather_df)
     st.plotly_chart(fig_weather)
-    
     st.download_button(
         label="Download Weather Data",
         data=weather_df.to_csv(index=False).encode('utf-8'),
         file_name='Weather_data.csv',
         mime='text/csv'
-    )    
+    )       
     st.header("Growth Tracker Data")
-    fig = create_dot_plot(growth_tracker_df)
-    st.plotly_chart(fig)   
+    fig_growth_tracker = create_dot_plot(growth_tracker_df)
+    st.plotly_chart(fig_growth_tracker)   
     st.download_button(
         label="Download Growth Stage Data",
         data=growth_tracker_df.to_csv(index=False).encode('utf-8'),
         file_name='growth_tracker_data.csv',
         mime='text/csv'
-    )   
-    fig = create_dot_plot_1(growth_data_df)
-    st.plotly_chart(fig)
+    )     
+    fig_growth_data = create_dot_plot_1(growth_data_df)
+    st.plotly_chart(fig_growth_data)
     clicked_farm_name = st.experimental_get_query_params().get('farm_name', [None])[0]
     if clicked_farm_name:
         st.subheader(f"Detail view for Farm Name: {clicked_farm_name}")
@@ -620,19 +632,17 @@ elif choice == 'Plot level Summary':
         data=growth_data_df.to_csv(index=False).encode('utf-8'),
         file_name='activity_tracker_data.csv',
         mime='text/csv'
-    )   
+    )       
     st.title('Plot wise Risk Summary')
-    fig = severity_dot_plot(risk_summary_df)
-    st.plotly_chart(fig)
+    fig_risk_summary = severity_dot_plot(risk_summary_df)
+    st.plotly_chart(fig_risk_summary)
     
 elif choice == 'Map level View':
     st.title("Map level View")
     st.sidebar.title("Options")
     zoom_level = st.sidebar.slider("Zoom Level", 1, 20, 15)
-    # Change filter to Mature Stage
     mature_stage_filter = st.sidebar.multiselect("Filter by Mature Stage", ["Threshing", "Harvesting", "Not Harvesting"], default=["Threshing", "Harvesting", "Not Harvesting"])
     seed_variety_filter = st.sidebar.multiselect("Filter by Seed Variety", ["1207", "8214", "R&D Plot"], default=["1207", "8214", "R&D Plot"])
-
     st.markdown(
         """
         <style>
@@ -682,10 +692,8 @@ elif choice == 'Map level View':
         """,
         unsafe_allow_html=True
     )
-
     gdf = load_geojson(GEOJSON_FILE_PATH)
     if gdf is not None:
-        # Update filtering to use Mature Stage
         if mature_stage_filter:
             gdf = gdf[gdf['Mature Stage'].isin(mature_stage_filter)]
         if seed_variety_filter:
