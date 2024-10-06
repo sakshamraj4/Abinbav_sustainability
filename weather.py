@@ -281,8 +281,8 @@ def create_activity_progress_plot():
         dict(Task='Fungicide Spray-2', Start='2024-08-03', Finish='2024-08-08', Done=59, NotDone=0, Status='done'),
         dict(Task='Pesticide Spray', Start='2024-08-09', Finish='2024-08-10', Done=8, NotDone=51, Status='done'),
         dict(Task='Fungicide Spray-3', Start='2024-09-06', Finish='2024-09-07', Done=1, NotDone=58, Status='done'),
-        dict(Task='Harvesting', Start='2024-09-08', Finish='2024-09-27', Done=50, NotDone=9, Status='ongoing'),
-        dict(Task='Threshing', Start='2024-09-16', Finish='2024-09-27', Done=24, NotDone=35, Status='ongoing')
+        dict(Task='Harvesting', Start='2024-09-08', Finish='2024-10-06', Done=50, NotDone=9, Status='ongoing'),
+        dict(Task='Threshing', Start='2024-09-16', Finish='2024-10-06', Done=35, NotDone=24, Status='ongoing')
     ]
     data_combined = []
     for item in data:
@@ -554,9 +554,9 @@ if choice == 'Organisation level Summary':
     with col6:
         st.markdown('<div class="box"><h2>Average Urea2 Rate</h2><p>7.00</p></div>', unsafe_allow_html=True)
     with col7:
-        st.markdown('<div class="box"><h2>Expected Yield in kg</h2><p>30132.13</p></div>', unsafe_allow_html=True)
+        st.markdown('<div class="box"><h2>Expected Yield in kg</h2><p>27050.61</p></div>', unsafe_allow_html=True)
     with col8:
-        st.markdown('<div class="box"><h2>Expected Yield in tonne</h2><p>30.14</p></div>', unsafe_allow_html=True)
+        st.markdown('<div class="box"><h2>Expected Yield in tonne</h2><p>27.05</p></div>', unsafe_allow_html=True)
     st.title("Crop Monitoring Observation")
     create_activity_progress_plot()   
     st.title('Risk Summary')
