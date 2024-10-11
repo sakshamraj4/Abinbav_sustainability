@@ -88,7 +88,7 @@
                 "Percentage of Yellow rust (%)": "1-2%",
                 "Pest & disease Remarks with Date first noticed on plot": "yellow rust",
                 "Any Specific Visual Plot Comment": "Starting Phase",
-                "Mature Stage": "Harvesting",
+                "Mature Stage": "Threshing",
                 "DAP/MOP (10 kg/bigha)": 10.05
             }
         },
@@ -207,7 +207,7 @@
                 "Percentage of Yellow rust (%)": "1-2%",
                 "Pest & disease Remarks with Date first noticed on plot": "Yellow rust & Blotch",
                 "Any Specific Visual Plot Comment": "Starting Phase",
-                "Mature Stage": "Not Harvesting",
+                "Mature Stage": "Threshing",
                 "DAP/MOP (10 kg/bigha)": 10.04
             }
         },
@@ -919,7 +919,7 @@
                 "Percentage of Yellow rust (%)": "1-2%",
                 "Pest & disease Remarks with Date first noticed on plot": "Yellow rust",
                 "Any Specific Visual Plot Comment": null,
-                "Mature Stage": "Not Harvesting",
+                "Mature Stage": "Harvesting",
                 "DAP/MOP (10 kg/bigha)": 10.03
             }
         },
@@ -1022,7 +1022,7 @@
                 "Percentage of Yellow rust (%)": "1-2%",
                 "Pest & disease Remarks with Date first noticed on plot": "Yellow rust",
                 "Any Specific Visual Plot Comment": "Blotch (Tilt spary done)",
-                "Mature Stage": "Harvesting",
+                "Mature Stage": "Threshing",
                 "DAP/MOP (10 kg/bigha)": 10.04
             }
         },
@@ -1501,7 +1501,7 @@
                 "Percentage of Yellow rust (%)": "1-2%",
                 "Pest & disease Remarks with Date first noticed on plot": "Yellow rust",
                 "Any Specific Visual Plot Comment": null,
-                "Mature Stage": "Harvesting",
+                "Mature Stage": "Threshing",
                 "DAP/MOP (10 kg/bigha)": 10.03
             }
         },
@@ -1580,7 +1580,7 @@
                 "Percentage of Yellow rust (%)": "1-2%",
                 "Pest & disease Remarks with Date first noticed on plot": "Yellow rust",
                 "Any Specific Visual Plot Comment": "Blotch (Tilt spary done)",
-                "Mature Stage": "Harvesting",
+                "Mature Stage": "Threshing",
                 "DAP/MOP (10 kg/bigha)": 10.02
             }
         },
@@ -1877,7 +1877,7 @@
                 "Percentage of Yellow rust (%)": "1-2%",
                 "Pest & disease Remarks with Date first noticed on plot": "Yellow rust & Blotch",
                 "Any Specific Visual Plot Comment": "Starting Phase",
-                "Mature Stage": "Harvesting",
+                "Mature Stage": "Threshing",
                 "DAP/MOP (10 kg/bigha)": 10.0
             }
         },
@@ -2162,7 +2162,7 @@
                 "Percentage of Yellow rust (%)": "1-2%",
                 "Pest & disease Remarks with Date first noticed on plot": "Yellow rust",
                 "Any Specific Visual Plot Comment": null,
-                "Mature Stage": "Not Harvesting",
+                "Mature Stage": "Harvesting",
                 "DAP/MOP (10 kg/bigha)": 10.03
             }
         },
@@ -2241,7 +2241,7 @@
                 "Percentage of Yellow rust (%)": "1-2%",
                 "Pest & disease Remarks with Date first noticed on plot": "Yellow rust",
                 "Any Specific Visual Plot Comment": null,
-                "Mature Stage": "Harvesting",
+                "Mature Stage": "Threshing",
                 "DAP/MOP (10 kg/bigha)": 9.97
             }
         },
@@ -2332,7 +2332,7 @@
                 "Percentage of Yellow rust (%)": "1-2%",
                 "Pest & disease Remarks with Date first noticed on plot": "Yellow rust",
                 "Any Specific Visual Plot Comment": null,
-                "Mature Stage": "Harvesting",
+                "Mature Stage": "Threshing",
                 "DAP/MOP (10 kg/bigha)": 10.03
             }
         },
@@ -2411,7 +2411,7 @@
                 "Percentage of Yellow rust (%)": "1-2%",
                 "Pest & disease Remarks with Date first noticed on plot": "Yellow rust",
                 "Any Specific Visual Plot Comment": null,
-                "Mature Stage": "Harvesting",
+                "Mature Stage": "Threshing",
                 "DAP/MOP (10 kg/bigha)": 9.79
             }
         },
@@ -2585,7 +2585,7 @@
                 "Percentage of Yellow rust (%)": "1-2%",
                 "Pest & disease Remarks with Date first noticed on plot": "Yellow rust & Blotch",
                 "Any Specific Visual Plot Comment": null,
-                "Mature Stage": "Harvesting",
+                "Mature Stage": "Threshing",
                 "DAP/MOP (10 kg/bigha)": 9.98
             }
         },
@@ -2874,7 +2874,7 @@
                 "Percentage of Yellow rust (%)": "1-2%",
                 "Pest & disease Remarks with Date first noticed on plot": "Yellow rust ",
                 "Any Specific Visual Plot Comment": "Starting Phase",
-                "Mature Stage": "Not Harvesting",
+                "Mature Stage": "Threshing",
                 "DAP/MOP (10 kg/bigha)": 9.93
             }
         },
@@ -3325,7 +3325,7 @@
                 "Percentage of Yellow rust (%)": "1-2%",
                 "Pest & disease Remarks with Date first noticed on plot": "yellow rust",
                 "Any Specific Visual Plot Comment": "Starting Phase",
-                "Mature Stage": "Harvesting",
+                "Mature Stage": "Threshing",
                 "DAP/MOP (10 kg/bigha)": 10.06
             }
         },
@@ -3424,7 +3424,7 @@
                 "Percentage of Yellow rust (%)": "1-2%",
                 "Pest & disease Remarks with Date first noticed on plot": "Yellow rust & Blotch",
                 "Any Specific Visual Plot Comment": null,
-                "Mature Stage": "Harvesting",
+                "Mature Stage": "Threshing",
                 "DAP/MOP (10 kg/bigha)": 10.0
             }
         },
@@ -3523,7 +3523,7 @@
                 "Percentage of Yellow rust (%)": "1-2%",
                 "Pest & disease Remarks with Date first noticed on plot": "Yellow rust & Blotch",
                 "Any Specific Visual Plot Comment": "Starting Phase",
-                "Mature Stage": "Not Harvesting",
+                "Mature Stage": "Threshing",
                 "DAP/MOP (10 kg/bigha)": 9.99
             }
         },
@@ -3796,7 +3796,7 @@
                 "Percentage of Yellow rust (%)": "1-2%",
                 "Pest & disease Remarks with Date first noticed on plot": "Yellow rust",
                 "Any Specific Visual Plot Comment": null,
-                "Mature Stage": "Harvesting",
+                "Mature Stage": "Threshing",
                 "DAP/MOP (10 kg/bigha)": 10.14
             }
         },
@@ -3883,7 +3883,7 @@
                 "Percentage of Yellow rust (%)": "1-2%",
                 "Pest & disease Remarks with Date first noticed on plot": "Yellow rust",
                 "Any Specific Visual Plot Comment": null,
-                "Mature Stage": "Not Harvesting",
+                "Mature Stage": "Threshing",
                 "DAP/MOP (10 kg/bigha)": 10.01
             }
         },
@@ -4061,7 +4061,7 @@
                 "Percentage of Yellow rust (%)": "1-2%",
                 "Pest & disease Remarks with Date first noticed on plot": "Yellow rust",
                 "Any Specific Visual Plot Comment": null,
-                "Mature Stage": "Harvesting",
+                "Mature Stage": "Threshing",
                 "DAP/MOP (10 kg/bigha)": 9.98
             }
         },
@@ -4267,7 +4267,7 @@
                 "Percentage of Yellow rust (%)": "1-2%",
                 "Pest & disease Remarks with Date first noticed on plot": "yellow rust",
                 "Any Specific Visual Plot Comment": "Starting Phase",
-                "Mature Stage": "Harvesting",
+                "Mature Stage": "Threshing",
                 "DAP/MOP (10 kg/bigha)": 10.06
             }
         },
@@ -4350,7 +4350,7 @@
                 "Percentage of Yellow rust (%)": "1-2%",
                 "Pest & disease Remarks with Date first noticed on plot": "Yellow rust",
                 "Any Specific Visual Plot Comment": null,
-                "Mature Stage": "Not Harvesting",
+                "Mature Stage": "Threshing",
                 "DAP/MOP (10 kg/bigha)": 10.03
             }
         },
@@ -4690,7 +4690,7 @@
                 "Percentage of Yellow rust (%)": "1-2%",
                 "Pest & disease Remarks with Date first noticed on plot": "Yellow rust",
                 "Any Specific Visual Plot Comment": null,
-                "Mature Stage": "Harvesting",
+                "Mature Stage": "Threshing",
                 "DAP/MOP (10 kg/bigha)": 9.91
             }
         },
@@ -5336,7 +5336,7 @@
                 "Percentage of Yellow rust (%)": "1-2%",
                 "Pest & disease Remarks with Date first noticed on plot": "Yellow rust",
                 "Any Specific Visual Plot Comment": null,
-                "Mature Stage": "Not Harvesting",
+                "Mature Stage": "Threshing",
                 "DAP/MOP (10 kg/bigha)": 10.03
             }
         },
@@ -5680,7 +5680,7 @@
                 "Percentage of Yellow rust (%)": "1-2%",
                 "Pest & disease Remarks with Date first noticed on plot": "yellow rust",
                 "Any Specific Visual Plot Comment": "Starting Phase",
-                "Mature Stage": "Not Harvesting",
+                "Mature Stage": "Threshing",
                 "DAP/MOP (10 kg/bigha)": 9.87
             }
         }
