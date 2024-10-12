@@ -531,21 +531,17 @@ choice = st.sidebar.selectbox('Go to', menu_options)
 if choice == 'Organisation level Summary':
     st.title("AB InBev Sustainability Dashboard")
     st.header("Organisation level Summarrization")    
-    col1, col2, col3, col4, col5, col6, col7, col8 = st.columns(8)
+    col1, col2, col3, col6, col7, col8 = st.columns(6)
     with col1:
         st.markdown('<div class="box"><h2>Total No of Plots</h2><p>59</p></div>', unsafe_allow_html=True)
     with col2:
         st.markdown('<div class="box"><h2>Total Area (Bigha)</h2><p>82.28</p></div>', unsafe_allow_html=True)
     with col3:
         st.markdown('<div class="box"><h2>Average Seed Rate</h2><p>8.01</p></div>', unsafe_allow_html=True)
-    with col4:
-        st.markdown('<div class="box"><h2>Average DAP/MOP Rate</h2><p>10.02</p></div>', unsafe_allow_html=True)
-    with col5:
-        st.markdown('<div class="box"><h2>Average Urea1 Rate</h2><p>7.01</p></div>', unsafe_allow_html=True)
     with col6:
-        st.markdown('<div class="box"><h2>Average Urea2 Rate</h2><p>7.00</p></div>', unsafe_allow_html=True)
+        st.markdown('<div class="box"><h2>Total Production of 1207 Seed variety(in kg)</h2><p>13478</p></div>', unsafe_allow_html=True)
     with col7:
-        st.markdown('<div class="box"><h2>Expected Yield in kg</h2><p>24115.22</p></div>', unsafe_allow_html=True)
+        st.markdown('<div class="box"><h2>Total Production of 8214 Seed variety(in kg)</h2><p>9880</p></div>', unsafe_allow_html=True)
     with col8:
         st.markdown('<div class="box"><h2>Expected Yield in tonne</h2><p>24.11</p></div>', unsafe_allow_html=True)
     st.title("Crop Monitoring Observation")
