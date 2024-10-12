@@ -91,33 +91,27 @@ st.markdown(
 def create_map(gdf, zoom_level):
     if gdf is None:
         return None
-
     center = [gdf.geometry.centroid.y.mean(), gdf.geometry.centroid.x.mean()]
     m = folium.Map(location=center, zoom_start=zoom_level, control_scale=True)
     geojson_data = gdf.__geo_interface__
-
-    # Update colors to reflect mature stages instead of severity
     mature_seed_colors = {
-        ("Not Harvesting", "1207"): "#ff4c4c",    # Red for Late Stage and 1207
-        ("Not Harvesting", "8214"): "#e53d3d",    # Slightly darker red for Late Stage and 8214
-        ("Not Harvesting", "R&D Plot"): "#c62828", # Even darker red for Late Stage and R&D Plot
-
-        ("Harvesting", "1207"): "#fbc02d",     # Yellow for Mid Stage and 1207
-        ("Harvesting", "8214"): "#f9a825",     # Slightly darker yellow for Mid Stage and 8214
-        ("Harvesting", "R&D Plot"): "#f57f17", # Even darker yellow for Mid Stage and R&D Plot
-
-        ("Threshing", "1207"): "#66bb6a",   # Green for Early Stage and 1207
-        ("Threshing", "8214"): "#43a047",   # Slightly darker green for Early Stage and 8214
-        ("Threshing", "R&D Plot"): "#388e3c" # Even darker green for Early Stage and R&D Plot
-    }
-
+        ("Good Yield", "1207"): "#ff4c4c",
+        ("Good Yield", "8214"): "#e53d3d",
+        ("Good Yield", "R&D Plot"): "#c62828",
+        ("Average Yield", "1207"): "#fbc02d",
+        ("Average Yield", "8214"): "#f9a825",
+        ("Average Yield", "R&D Plot"): "#f57f17",
+        ("Below Average Yield", "1207"): "#66bb6a",
+        ("Below Average Yield", "8214"): "#43a047",
+        ("Below Average Yield", "R&D Plot"): "#388e3c",
+        ("Bad Yield", "1207"): "#8e24aa",
+        ("Bad Yield", "8214"): "#7b1fa2",
+        ("Bad Yield", "R&D Plot"): "#6a1b9a"
+    }  
     for idx, feature in enumerate(geojson_data['features']):
-        # Use Mature Stage instead of Severity Level
         mature_stage = feature['properties'].get('Mature Stage', '')
-        seed_variety = feature['properties'].get('Seed-Varity', 'N/A')
-        
-        color = mature_seed_colors.get((mature_stage, seed_variety), "gray")
-        
+        seed_variety = feature['properties'].get('Seed-Varity', 'N/A')    
+        color = mature_seed_colors.get((mature_stage, seed_variety), "gray")     
         simple_fields = {
             "Name": feature['properties'].get('Name', 'N/A'),
             "Area (Bigha)": feature['properties'].get('Area (Bigha)', 'N/A'),
@@ -125,8 +119,7 @@ def create_map(gdf, zoom_level):
             "Harvesting Date": feature['properties'].get('Harvesting Date', 'N/A'),
             "Yield (kg/bigha)": feature['properties'].get('Yield (kg/bigha)', 'N/A'),
             "Seed Variety": seed_variety
-        }
-        
+        }        
         all_fields = feature['properties']
         keys = list(all_fields.keys())
         values = list(all_fields.values())
@@ -139,8 +132,7 @@ def create_map(gdf, zoom_level):
             <div style="width: 50%; padding-right: 15px;">{column1}</div>
             <div style="width: 50%; padding-left: 15px;">{column2}</div>
         </div>
-        '''
-        
+        '''     
         doc_buffer = create_docx_for_plot(feature['properties'])
         doc_base64 = base64.b64encode(doc_buffer.getvalue()).decode()
         plot_name = feature['properties'].get('Name', f'plot_{idx + 1}').replace(' ', '_')
@@ -151,8 +143,7 @@ def create_map(gdf, zoom_level):
             <div id="detailedView" style="display: none;">{detailed_tooltip_html}</div>
             <div><a href="{download_link}" download="{plot_name}.docx">Download DOCX</a></div>
         </div>
-        '''
-        
+        '''    
         folium.GeoJson(
             feature,
             style_function=lambda x, color=color: {'fillColor': color, 'color': color, 'weight': 2, 'fillOpacity': 0.6},
@@ -641,7 +632,7 @@ elif choice == 'Map level View':
     st.title("Map level View")
     st.sidebar.title("Options")
     zoom_level = st.sidebar.slider("Zoom Level", 1, 20, 15)
-    mature_stage_filter = st.sidebar.multiselect("Filter by Mature Stage", ["Threshing", "Harvesting", "Not Harvesting"], default=["Threshing", "Harvesting", "Not Harvesting"])
+    mature_stage_filter = st.sidebar.multiselect("Filter by Category", ["Good Yield", "Average Yield", "Below Average Yield", "Bad Yield"], default=["Good Yield", "Average Yield", "Below Average Yield", "Bad Yield"])
     seed_variety_filter = st.sidebar.multiselect("Filter by Seed Variety", ["1207", "8214", "R&D Plot"], default=["1207", "8214", "R&D Plot"])
     st.markdown(
         """
