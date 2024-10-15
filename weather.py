@@ -95,19 +95,20 @@ def create_map(gdf, zoom_level):
     m = folium.Map(location=center, zoom_start=zoom_level, control_scale=True)
     geojson_data = gdf.__geo_interface__
     mature_seed_colors = {
-        ("Good Yield", "1207"): "#ff4c4c",
-        ("Good Yield", "8214"): "#e53d3d",
-        ("Good Yield", "R&D Plot"): "#c62828",
-        ("Average Yield", "1207"): "#fbc02d",
-        ("Average Yield", "8214"): "#f9a825",
-        ("Average Yield", "R&D Plot"): "#f57f17",
-        ("Below Average Yield", "1207"): "#66bb6a",
-        ("Below Average Yield", "8214"): "#43a047",
-        ("Below Average Yield", "R&D Plot"): "#388e3c",
-        ("Bad Yield", "1207"): "#8e24aa",
-        ("Bad Yield", "8214"): "#7b1fa2",
-        ("Bad Yield", "R&D Plot"): "#6a1b9a"
-    }  
+    ("Good Yield", "1207"): "#006400",
+    ("Good Yield", "8214"): "#32CD32",
+    ("Good Yield", "R&D Plot"): "#228B22",
+    ("Average Yield", "1207"): "#FFD700",
+    ("Average Yield", "8214"): "#FFFF99",
+    ("Average Yield", "R&D Plot"): "#FFD966",
+    ("Below Average Yield", "1207"): "#FF8C00",
+    ("Below Average Yield", "8214"): "#FFA07A",
+    ("Below Average Yield", "R&D Plot"): "#FFA500",
+    ("Bad Yield", "1207"): "#8B0000",
+    ("Bad Yield", "8214"): "#FF6347",
+    ("Bad Yield", "R&D Plot"): "#DC143C"
+}
+
     for idx, feature in enumerate(geojson_data['features']):
         mature_stage = feature['properties'].get('Mature Stage', '')
         seed_variety = feature['properties'].get('Seed-Varity', 'N/A')    
@@ -666,8 +667,16 @@ elif choice == 'Map level View':
     st.title("Map level View")
     st.sidebar.title("Options")
     zoom_level = st.sidebar.slider("Zoom Level", 1, 20, 15)
-    mature_stage_filter = st.sidebar.multiselect("Filter by Category", ["Good Yield", "Average Yield", "Below Average Yield", "Bad Yield"], default=["Good Yield", "Average Yield", "Below Average Yield", "Bad Yield"])
-    seed_variety_filter = st.sidebar.multiselect("Filter by Seed Variety", ["1207", "8214", "R&D Plot"], default=["1207", "8214", "R&D Plot"])
+    mature_stage_filter = st.sidebar.multiselect(
+        "Filter by Category", 
+        ["Good Yield", "Average Yield", "Below Average Yield", "Bad Yield"], 
+        default=["Good Yield", "Average Yield", "Below Average Yield", "Bad Yield"]
+    )    
+    seed_variety_filter = st.sidebar.multiselect(
+        "Filter by Seed Variety", 
+        ["1207", "8214", "R&D Plot"], 
+        default=["1207", "8214", "R&D Plot"]
+    )
     st.markdown(
         """
         <style>
@@ -734,3 +743,18 @@ elif choice == 'Map level View':
                 """,
                 unsafe_allow_html=True
             )
+    st.markdown("""
+<div style="border:1px solid #ddd; padding: 10px; border-radius: 5px; margin-top: 20px; background-color: #f7f7f7;">
+    <h4 style="text-align: center;">Yield Category Legend</h4>
+    <ul style="list-style-type:none; padding-left: 0;">
+        <li><span style="background-color:#006400; padding: 5px 10px; color:white; border-radius: 5px;">Good Yield (1207)</span>: Yield ≥ 320 kg/bigha</li>
+        <li><span style="background-color:#32CD32; padding: 5px 10px; color:white; border-radius: 5px;">Good Yield (8214)</span>: Yield ≥ 320 kg/bigha</li>
+        <li><span style="background-color:#FFD700; padding: 5px 10px; color:black; border-radius: 5px;">Average Yield (1207)</span>: 280 kg/bigha ≤ Yield < 320 kg/bigha</li>
+        <li><span style="background-color:#FFFF99; padding: 5px 10px; color:black; border-radius: 5px;">Average Yield (8214)</span>: 280 kg/bigha ≤ Yield < 320 kg/bigha</li>
+        <li><span style="background-color:#FF8C00; padding: 5px 10px; color:white; border-radius: 5px;">Below Average Yield (1207)</span>: 200 kg/bigha ≤ Yield < 280 kg/bigha</li>
+        <li><span style="background-color:#FFA07A; padding: 5px 10px; color:black; border-radius: 5px;">Below Average Yield (8214)</span>: 200 kg/bigha ≤ Yield < 280 kg/bigha</li>
+        <li><span style="background-color:#8B0000; padding: 5px 10px; color:white; border-radius: 5px;">Bad Yield (1207)</span>: Yield < 200 kg/bigha</li>
+        <li><span style="background-color:#FF6347; padding: 5px 10px; color:white; border-radius: 5px;">Bad Yield (8214)</span>: Yield < 200 kg/bigha</li>
+    </ul>
+</div>
+""", unsafe_allow_html=True)
