@@ -15,6 +15,7 @@ import io
 import zipfile
 from docx import Document
 import base64
+from plotly.subplots import make_subplots
 
 logging.basicConfig(level=logging.INFO)
 st.set_page_config(layout="wide")
@@ -482,27 +483,37 @@ def create_stacked_bar_chart(df):
                  labels={'index': 'Columns'})
     return fig
 
-def kelvin_to_celsius(k):
-    return k - 273.15
+def emoji_from_value(val, emoji, threshold):
+    return emoji if val >= threshold else ''
 
 def plot_weather_trends(weather_df):
-    weather_df['dt'] = pd.to_datetime(weather_df['dt'], errors='coerce')
-    weather_df['temp_max_C'] = kelvin_to_celsius(weather_df['temp_max'])
-    weather_df['temp_min_C'] = kelvin_to_celsius(weather_df['temp_min'])
-    weather_df['clouds_normalized'] = weather_df['clouds'] / 100.0
+    weather_df['datetime'] = pd.to_datetime(weather_df['datetime'], errors='coerce')
+    weather_df['clouds_normalized'] = weather_df['cloudcover'] / 100.0
     weather_df['snow_emoji'] = weather_df['snow'].apply(lambda x: '❄️' if x > 0 else '')
-    weather_df['rain_emoji'] = weather_df['rain'].apply(lambda x: '🌧️' if x > 0 else '')
+    weather_df['precip_emoji'] = weather_df['precip'].apply(lambda x: '🌧️' if x > 0 else '')
     weather_df['clouds_emoji'] = weather_df['clouds_normalized'].apply(lambda x: '☁️' if x > 0.5 else '')
-    fig = px.line(weather_df, x='dt', y=['temp_max_C', 'temp_min_C'],
+    fig = px.line(weather_df, x='datetime', y=['tempmax', 'tempmin'],
                   title='Temperature Trends',
-                  labels={'dt': 'Date', 'value': 'Temperature (°C)'},
+                  labels={'datetime': 'Date', 'value': 'Temperature (°C)'},
                   line_shape='linear')
-    fig.add_scatter(x=weather_df['dt'], y=[weather_df['temp_max_C'].max()] * len(weather_df),
-                    mode='text', text=weather_df['snow_emoji'], name='Snow', textposition='top center')
-    fig.add_scatter(x=weather_df['dt'], y=[weather_df['temp_min_C'].max()] * len(weather_df),
-                    mode='text', text=weather_df['rain_emoji'], name='Rain', textposition='top center')
-    fig.add_scatter(x=weather_df['dt'], y=[weather_df['temp_min_C'].min()] * len(weather_df),
-                    mode='text', text=weather_df['clouds_emoji'], name='Clouds', textposition='top center')
+    fig.add_scatter(x=weather_df['datetime'], y=weather_df['tempmax'], 
+                    mode='text', text=weather_df['snow_emoji'], 
+                    name='Snow', textposition='top center')
+    fig.add_scatter(x=weather_df['datetime'], y=weather_df['tempmin'], 
+                    mode='text', text=weather_df['precip_emoji'], 
+                    name='Rain', textposition='top center')
+    fig.add_scatter(x=weather_df['datetime'], y=weather_df['tempmin'], 
+                    mode='text', text=weather_df['clouds_emoji'], 
+                    name='Clouds', textposition='top center')
+    fig.update_traces(
+        hovertemplate="<b>Date</b>: %{x}<br>" +
+                      "<b>Temp(°C)</b>: %{y:.1f}<br>" +
+                      "<b>Snow</b>: %{customdata[0]}<br>" +
+                      "<b>Precipitation</b>: %{customdata[1]} mm<br>" +
+                      "<b>Cloud Cover</b>: %{customdata[2]}%<br>" +
+                      "<b>Wind Speed</b>: %{customdata[3]} km/h"
+    )
+    fig.update_traces(customdata=weather_df[['snow', 'precip', 'cloudcover', 'windspeed']])
     fig.update_layout(height=700)
     return fig
 
@@ -514,7 +525,7 @@ growth_tracker_url = "https://raw.githubusercontent.com/sakshamraj4/Abinbav_sust
 growth_tracker_df = pd.read_csv(growth_tracker_url)
 growth_data_csv_url = "https://raw.githubusercontent.com/sakshamraj4/Abinbav_sustainability/main/fig.csv"
 growth_data_df = pd.read_csv(growth_data_csv_url)
-weather_data_url = "https://raw.githubusercontent.com/sakshamraj4/Abinbav_sustainability/main//weather_data.csv"
+weather_data_url = "https://raw.githubusercontent.com/sakshamraj4/Abinbav_sustainability/main//weather.csv"
 weather_df = pd.read_csv(weather_data_url)
 activity_progress_url = 'https://github.com/sakshamraj4/Abinbav_sustainability/raw/main/crop_monitorig_protocol.csv'
 activity_progress_df = pd.read_csv(activity_progress_url)
@@ -607,7 +618,6 @@ if choice == 'Organisation level Summary':
     
 elif choice == 'Plot level Summary':
     st.title("Plot level Summarization")
-
     st.header("Harvesting Details")
     harvest_path = 'https://raw.githubusercontent.com/sakshamraj4/Abinbav_sustainability/main/harvesting.csv'
     harvest_df = pd.read_csv(harvest_path)
@@ -630,21 +640,21 @@ elif choice == 'Plot level Summary':
         mime='text/csv'
     )    
     st.subheader("Weather Trends")
-    fig_weather = plot_weather_trends(weather_df)
+    weather_df['datetime'] = pd.to_datetime(weather_df['datetime'], errors='coerce')
+    weather_df['month'] = weather_df['datetime'].dt.strftime('%B')
+    month_selected = st.selectbox('Select Month', ['May', 'June', 'July', 'August', 'September', 'October'])
+    filtered_df = weather_df[weather_df['month'] == month_selected]
+    fig_weather = plot_weather_trends(filtered_df)
     st.plotly_chart(fig_weather)
+    st.markdown("""
+    **Weather Data Source**: 
+    - Manali Weather Station (42065099999)
+    - Dharamshala Weather Station (42062099999)
+    """)
     st.download_button(
         label="Download Weather Data",
         data=weather_df.to_csv(index=False).encode('utf-8'),
         file_name='Weather_data.csv',
-        mime='text/csv'
-    )       
-    st.header("Growth Tracker Data")
-    fig_growth_tracker = create_dot_plot(growth_tracker_df)
-    st.plotly_chart(fig_growth_tracker)   
-    st.download_button(
-        label="Download Growth Stage Data",
-        data=growth_tracker_df.to_csv(index=False).encode('utf-8'),
-        file_name='growth_tracker_data.csv',
         mime='text/csv'
     )     
     fig_growth_data = create_dot_plot_1(growth_data_df)
