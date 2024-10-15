@@ -530,7 +530,7 @@ menu_options = ['Organisation level Summary', 'Plot level Summary', 'Map level V
 choice = st.sidebar.selectbox('Go to', menu_options)
 if choice == 'Organisation level Summary':
     st.title("AB InBev Sustainability Dashboard")
-    st.header("Organisation level Summarrization")    
+    st.header("Organisation level Summarization")    
     col1, col2, col3, col6, col7, col8 = st.columns(6)
     with col1:
         st.markdown('<div class="box"><h2>Total No of Plots</h2><p>59</p></div>', unsafe_allow_html=True)
@@ -544,15 +544,53 @@ if choice == 'Organisation level Summary':
         st.markdown('<div class="box"><h2>Total Production of 8214 Seed variety(in kg)</h2><p>9880</p></div>', unsafe_allow_html=True)
     with col8:
         st.markdown('<div class="box"><h2>Expected Yield in tonne</h2><p>24.11</p></div>', unsafe_allow_html=True)
+    st.subheader("Yield Summary")
+    col1, col2 = st.columns(2)
+    with col1:
+        st.markdown("""
+        <div>
+            <h4>1207 Seed Variety</h4>
+            <ul>
+                <li>Good Yield: 75% (18/24 plots)</li>
+                <li>Average Yield: 12.5% (3/24 plots)</li>
+                <li>Below Average Yield: 8.3% (2/24 plots)</li>
+                <li>Bad Yield: 4.16% (1/24 plots)</li>
+            </ul>
+        </div>
+        """, unsafe_allow_html=True)
+    with col2:
+        st.markdown("""
+        <div>
+            <h4>8214 Seed Variety</h4>
+            <ul>
+                <li>Good Yield: 12% (4/33 plots)</li>
+                <li>Average Yield: 18.1% (6/33 plots)</li>
+                <li>Below Average Yield: 48.48% (16/33 plots)</li>
+                <li>Bad Yield: 21.21% (7/33 plots)</li>
+            </ul>
+        </div>
+        """, unsafe_allow_html=True)
+    st.subheader("Yield Category Legend")
+    st.markdown("""
+    <div style="border:1px solid #ddd; padding: 10px; border-radius: 5px;">
+        <strong>Yield Categories based on Yield (kg/bigha):</strong>
+        <ul>
+            <li><strong>Good Yield</strong>: Yield >= 320 kg/bigha</li>
+            <li><strong>Average Yield</strong>: 280 kg/bigha <= Yield < 320 kg/bigha</li>
+            <li><strong>Below Average Yield</strong>: 200 kg/bigha <= Yield < 280 kg/bigha</li>
+            <li><strong>Bad Yield</strong>: Yield < 200 kg/bigha</li>
+        </ul>
+    </div>
+    """, unsafe_allow_html=True)
     st.title("Crop Monitoring Observation")
-    create_activity_progress_plot()   
+    create_activity_progress_plot()
     st.title('Risk Summary')
     plot_severity_counts(risk_summary_df, sort_by='specific_order')    
     st.header("Activity Progress")
-    create_bar_plots(activity_df)    
+    create_bar_plots(activity_df)
     st.header("Growth Tracker Status")
     fig = create_stacked_bar_chart(growth_tracker_df)
-    st.plotly_chart(fig)   
+    st.plotly_chart(fig)
     st.download_button(
         label="Download Data updated via Field team",
         data=field_team_df.to_csv(index=False).encode('utf-8'),
